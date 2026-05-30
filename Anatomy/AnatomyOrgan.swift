@@ -137,6 +137,18 @@ extension AnatomyOrgan {
         hasBundledModel ? nil : "Model coming soon"
     }
 
+    /// SF Symbols paired with each entry in `functions`, for the panel's Key Functions list.
+    var functionSymbols: [String] {
+        switch id {
+        case "heart":
+            return ["drop.fill", "waveform.path.ecg", "lungs.fill"]
+        case "brain":
+            return ["eye.fill", "figure.walk", "lightbulb.fill"]
+        default:
+            return []
+        }
+    }
+
     static let launcherFeatured: [AnatomyOrgan] = featured.filter { organ in
         ["heart", "brain"].contains(organ.id)
     }
@@ -171,20 +183,20 @@ extension AnatomyOrgan {
             pulseStyle: .heartbeat,
             immersivePreset: ImmersivePreset(
                 heroX: 0,
-                heroY: 34,
-                heroZ: 196,
-                stageWidth: 2180,
-                stageHeight: 1540,
-                panelX: 760,
-                panelY: 18,
-                panelZ: 246,
-                panelWidth: 560,
-                carouselY: 132,
-                carouselZ: 182,
-                carouselScale: 1.22,
+                heroY: 24,
+                heroZ: 212,
+                stageWidth: 2060,
+                stageHeight: 1460,
+                panelX: 736,
+                panelY: 16,
+                panelZ: 238,
+                panelWidth: 592,
+                carouselY: 158,
+                carouselZ: 198,
+                carouselScale: 1.12,
                 labelLeftX: 0.08,
                 labelRightX: 0.88,
-                labelWidth: 296,
+                labelWidth: 310,
                 labelSelectedZ: 92,
                 labelRestZ: 32,
                 floorGlowWidth: 620,
@@ -326,20 +338,20 @@ extension AnatomyOrgan {
             pulseStyle: .neural,
             immersivePreset: ImmersivePreset(
                 heroX: 0,
-                heroY: -20,
-                heroZ: 188,
-                stageWidth: 2240,
-                stageHeight: 1560,
-                panelX: 760,
-                panelY: -6,
+                heroY: -8,
+                heroZ: 214,
+                stageWidth: 2100,
+                stageHeight: 1480,
+                panelX: 740,
+                panelY: 2,
                 panelZ: 240,
-                panelWidth: 560,
-                carouselY: 138,
-                carouselZ: 180,
-                carouselScale: 1.18,
+                panelWidth: 596,
+                carouselY: 160,
+                carouselZ: 198,
+                carouselScale: 1.10,
                 labelLeftX: 0.09,
                 labelRightX: 0.90,
-                labelWidth: 316,
+                labelWidth: 278,
                 labelSelectedZ: 90,
                 labelRestZ: 30,
                 floorGlowWidth: 650,
@@ -838,17 +850,17 @@ extension AnatomyOrgan {
         switch (id, angle) {
         case ("heart", .front):
             return ViewerLayout(
-                heroPosition: SIMD3<Float>(0.0, 1.34, -1.96),
-                labelsPosition: SIMD3<Float>(0.0, 1.34, -1.96),
-                panelPosition: SIMD3<Float>(1.10, 1.35, -1.82),
-                panelWidth: 744,
-                carouselPosition: SIMD3<Float>(0.0, 0.84, -1.62),
+                heroPosition: SIMD3<Float>(0.0, 1.52, -1.80),
+                labelsPosition: SIMD3<Float>(0.0, 1.52, -1.80),
+                panelPosition: SIMD3<Float>(0.86, 1.54, -1.55),
+                panelWidth: 820,
+                carouselPosition: SIMD3<Float>(0.0, 1.04, -1.12),
                 heroYawOffset: 0,
                 heroPitchOffset: 0,
                 heroVisualOffset: .zero,
-                labelLeftX: 0.46,
+                labelLeftX: 0.44,
                 labelRightX: 0.52,
-                labelWidth: 236,
+                labelWidth: 312,
                 labelSelectedZ: 92,
                 labelRestZ: 32,
                 annotationPlacements: [
@@ -864,17 +876,17 @@ extension AnatomyOrgan {
             )
         case ("heart", .frontRight):
             return ViewerLayout(
-                heroPosition: SIMD3<Float>(0.03, 1.34, -1.96),
-                labelsPosition: SIMD3<Float>(0.03, 1.34, -1.96),
-                panelPosition: SIMD3<Float>(1.12, 1.35, -1.82),
-                panelWidth: 724,
-                carouselPosition: SIMD3<Float>(0.0, 0.84, -1.62),
+                heroPosition: SIMD3<Float>(0.03, 1.52, -1.80),
+                labelsPosition: SIMD3<Float>(0.03, 1.52, -1.80),
+                panelPosition: SIMD3<Float>(0.88, 1.54, -1.55),
+                panelWidth: 812,
+                carouselPosition: SIMD3<Float>(0.0, 1.04, -1.12),
                 heroYawOffset: -22,
                 heroPitchOffset: -2,
                 heroVisualOffset: CGSize(width: 26, height: 0),
-                labelLeftX: 0.44,
-                labelRightX: 0.49,
-                labelWidth: 230,
+                labelLeftX: 0.43,
+                labelRightX: 0.50,
+                labelWidth: 310,
                 labelSelectedZ: 94,
                 labelRestZ: 34,
                 annotationPlacements: [
@@ -890,17 +902,17 @@ extension AnatomyOrgan {
             )
         case ("brain", .front):
             return ViewerLayout(
-                heroPosition: SIMD3<Float>(0.0, 1.38, -2.00),
-                labelsPosition: SIMD3<Float>(0.0, 1.38, -2.00),
-                panelPosition: SIMD3<Float>(1.10, 1.37, -1.84),
-                panelWidth: 736,
-                carouselPosition: SIMD3<Float>(0.0, 0.84, -1.64),
+                heroPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                labelsPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                panelPosition: SIMD3<Float>(0.88, 1.56, -1.58),
+                panelWidth: 818,
+                carouselPosition: SIMD3<Float>(0.0, 1.06, -1.14),
                 heroYawOffset: 0,
                 heroPitchOffset: 0,
                 heroVisualOffset: .zero,
                 labelLeftX: 0.50,
-                labelRightX: 0.58,
-                labelWidth: 244,
+                labelRightX: 0.60,
+                labelWidth: 320,
                 labelSelectedZ: 96,
                 labelRestZ: 34,
                 annotationPlacements: [
@@ -913,11 +925,11 @@ extension AnatomyOrgan {
             )
         default:
             return ViewerLayout(
-                heroPosition: SIMD3<Float>(0.0, 1.35, -1.92),
-                labelsPosition: SIMD3<Float>(0.0, 1.35, -1.92),
-                panelPosition: SIMD3<Float>(1.08, 1.35, -1.80),
-                panelWidth: 680,
-                carouselPosition: SIMD3<Float>(0.0, 0.84, -1.60),
+                heroPosition: SIMD3<Float>(0.0, 1.52, -1.80),
+                labelsPosition: SIMD3<Float>(0.0, 1.52, -1.80),
+                panelPosition: SIMD3<Float>(0.86, 1.54, -1.55),
+                panelWidth: 760,
+                carouselPosition: SIMD3<Float>(0.0, 1.04, -1.12),
                 heroYawOffset: 0,
                 heroPitchOffset: 0,
                 heroVisualOffset: .zero,

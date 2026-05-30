@@ -74,7 +74,7 @@ final class AppModel {
     var lastImmersiveOpenResult: ImmersiveOpenResult = .idle
     var lastStatusMessage = "Ready to begin."
 
-    var selectedOrganID = AnatomyOrgan.featured.first?.id ?? ""
+    var selectedOrganID = AnatomyOrgan.launcherFeatured.first?.id ?? "heart"
     var selectedAnnotationID: String?
     var selectedStudyMode: StudyMode = .explore
     var isLearnMorePresented = false
@@ -88,11 +88,12 @@ final class AppModel {
 
     init() {
         restoreProgress()
+        constrainSelectionToMVP()
     }
 
     var selectedOrgan: AnatomyOrgan {
-        AnatomyOrgan.featured.first(where: { $0.id == selectedOrganID })
-            ?? AnatomyOrgan.featured[0]
+        AnatomyOrgan.launcherFeatured.first(where: { $0.id == selectedOrganID })
+            ?? AnatomyOrgan.launcherFeatured[0]
     }
 
     var selectedAnnotation: OrganAnnotation? {
@@ -150,6 +151,20 @@ final class AppModel {
         hasSubmittedCurrentQuizAnswer = false
         lastStatusMessage = "\(selectedOrgan.title) ready to study."
         markModeCompleted(.explore)
+    }
+
+    func constrainSelectionToMVP() {
+        let allowedIDs = Set(AnatomyOrgan.launcherFeatured.map(\.id))
+        guard allowedIDs.contains(selectedOrganID) else {
+            selectedOrganID = AnatomyOrgan.launcherFeatured.first?.id ?? "heart"
+            selectedAnnotationID = nil
+            selectedStudyMode = .explore
+            isLearnMorePresented = false
+            activeQuizQuestionIndex = 0
+            selectedQuizAnswerIndex = nil
+            hasSubmittedCurrentQuizAnswer = false
+            return
+        }
     }
 
     func setStudyMode(_ mode: StudyMode) {

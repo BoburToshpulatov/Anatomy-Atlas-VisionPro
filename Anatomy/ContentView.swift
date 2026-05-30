@@ -10,13 +10,13 @@ import RealityKit
 import RealityKitContent
 
 private enum LauncherLayout {
-    static let maxWidth: CGFloat = 848
-    static let contentSpacing: CGFloat = 14
-    static let buttonWidth: CGFloat = 320
-    static let buttonHeight: CGFloat = 58
-    static let topPadding: CGFloat = 18
-    static let bottomPadding: CGFloat = 18
-    static let shellCornerRadius: CGFloat = 36
+    static let maxWidth: CGFloat = 1060
+    static let contentSpacing: CGFloat = 30
+    static let buttonWidth: CGFloat = 460
+    static let buttonHeight: CGFloat = 70
+    static let topPadding: CGFloat = 38
+    static let bottomPadding: CGFloat = 38
+    static let shellCornerRadius: CGFloat = 40
 }
 
 struct ContentView: View {
@@ -27,7 +27,8 @@ struct ContentView: View {
     private let organs = AnatomyOrgan.launcherFeatured
     var body: some View {
         ZStack {
-            if appModel.immersiveSpaceState == .open {
+            switch appModel.immersiveSpaceState {
+            case .open:
                 Color.clear
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -45,9 +46,19 @@ struct ContentView: View {
 
                     Spacer()
                 }
-                .padding(.top, 18)
-                .padding(.trailing, 18)
-            } else {
+                .padding(.top, 14)
+                .padding(.trailing, 14)
+
+            case .inTransition:
+                LauncherBackdrop(tint: appModel.selectedOrgan.tint)
+                    .allowsHitTesting(false)
+
+                TransitionIndicator(
+                    message: appModel.lastStatusMessage.isEmpty ? "Preparing study space…" : appModel.lastStatusMessage,
+                    tint: appModel.selectedOrgan.tint
+                )
+
+            case .closed:
                 LauncherBackdrop(tint: appModel.selectedOrgan.tint)
                     .allowsHitTesting(false)
 
@@ -56,23 +67,24 @@ struct ContentView: View {
 
                     LauncherShell {
                         VStack(spacing: LauncherLayout.contentSpacing) {
-                            VStack(spacing: 6) {
+                            VStack(spacing: 10) {
                                 Text("Immersive Anatomy")
-                                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                                    .font(.system(size: 48, weight: .bold, design: .rounded))
                                     .foregroundStyle(.white)
 
                                 Text("Choose an organ, then open the room-scale study space.")
-                                    .font(.title3.weight(.medium))
-                                    .foregroundStyle(.white.opacity(0.76))
+                                    .font(.title2.weight(.medium))
+                                    .foregroundStyle(.white.opacity(0.72))
                             }
                             .multilineTextAlignment(.center)
 
-                            HStack(spacing: 14) {
+                            HStack(spacing: 28) {
                                 ForEach(organs) { organ in
                                     LauncherOrganCard(
                                         organ: organ,
                                         isSelected: organ.id == appModel.selectedOrganID
                                     )
+                                    .frame(maxWidth: .infinity)
                                     .onTapGesture {
                                         appModel.selectOrgan(organ.id)
                                     }
@@ -84,17 +96,19 @@ struct ContentView: View {
                             Button(action: enterImmersiveSpace) {
                                 HStack(spacing: 12) {
                                     Image(systemName: "visionpro")
-                                        .font(.headline.weight(.bold))
+                                        .font(.title2.weight(.bold))
 
                                     Text("Enter Study Space")
-                                        .font(.headline.weight(.bold))
+                                        .font(.title2.weight(.bold))
                                 }
+                                .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.borderedProminent)
                             .tint(appModel.selectedOrgan.tint)
                             .foregroundStyle(.white)
                             .frame(width: LauncherLayout.buttonWidth, height: LauncherLayout.buttonHeight)
                             .contentShape(Rectangle())
+                            .shadow(color: appModel.selectedOrgan.tint.opacity(0.34), radius: 18, y: 8)
                             .zIndex(999)
                         }
                         .frame(maxWidth: LauncherLayout.maxWidth, alignment: .center)
@@ -163,47 +177,47 @@ private struct StudySpaceActivePanel: View {
     let onClose: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        HStack(spacing: 10) {
+            // Status indicator
             HStack(spacing: 8) {
-                Image(systemName: "visionpro.circle.fill")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(.white.opacity(0.78))
+                Circle()
+                    .fill(.green.opacity(0.92))
+                    .frame(width: 7, height: 7)
+                    .shadow(color: .green.opacity(0.5), radius: 4)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Study Space Active")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.white.opacity(0.88))
-
-                    Text(title)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Study Space")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.60))
+                        .foregroundStyle(.white.opacity(0.92))
+
+                    Text("\(title) · \(modeTitle)")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.58))
                 }
             }
 
-            Text(modeTitle + " mode")
-                .font(.caption2.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.50))
+            Divider()
+                .frame(height: 22)
+                .overlay(.white.opacity(0.14))
 
             Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(.caption.weight(.bold))
-                    .frame(maxWidth: .infinity)
+                    .foregroundStyle(.white.opacity(0.82))
+                    .frame(width: 24, height: 24)
+                    .background(.white.opacity(0.08), in: Circle())
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.white.opacity(0.08))
-            .foregroundStyle(.white.opacity(0.78))
+            .buttonStyle(.plain)
         }
-        .frame(width: 146, alignment: .leading)
-        .padding(8)
-        .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.black.opacity(0.40), in: Capsule())
+        .glassBackgroundEffect(in: Capsule())
         .overlay {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+            Capsule()
+                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.18), radius: 12, y: 6)
-        .opacity(0.82)
-        .offset(x: 86, y: -56)
+        .shadow(color: .black.opacity(0.20), radius: 12, y: 6)
     }
 }
 
@@ -214,13 +228,25 @@ private struct LauncherShell<Content: View>: View {
         content
             .padding(.horizontal, 24)
             .padding(.vertical, 18)
-            .background(.black.opacity(0.18), in: RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous))
+            .background(
+                LinearGradient(
+                    colors: [
+                        .black.opacity(0.74),
+                        .black.opacity(0.62)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            // Black fill is clipped to the exact same shape used for the glass + border,
+            // so the dark surface is the same size/radius as the glass.
+            .clipShape(RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous))
             .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous)
-                    .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.22), radius: 32, y: 18)
+            .shadow(color: .black.opacity(0.30), radius: 32, y: 18)
     }
 }
 
@@ -229,49 +255,55 @@ private struct LauncherOrganCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                organ.tint.opacity(isSelected ? 0.42 : 0.14),
-                                .white.opacity(isSelected ? 0.12 : 0.05),
-                                .black.opacity(0.20)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
+        VStack(spacing: 18) {
+            // Large model stage inside the card
+            organPreview
+                .frame(height: 248)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    organ.tint.opacity(isSelected ? 0.32 : 0.08),
+                                    .white.opacity(isSelected ? 0.05 : 0.015),
+                                    .black.opacity(0.28)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
                         )
-                    )
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .strokeBorder(.white.opacity(0.07), lineWidth: 1)
+                }
 
-                organPreview
-            }
-            .frame(width: isSelected ? 192 : 176, height: isSelected ? 132 : 120)
-            .overlay {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .strokeBorder(.white.opacity(isSelected ? 0.18 : 0.08), lineWidth: 1)
-            }
-            .shadow(color: organ.tint.opacity(isSelected ? 0.24 : 0.10), radius: isSelected ? 24 : 14, y: 10)
-
-            VStack(spacing: 4) {
+            VStack(spacing: 5) {
                 Text(organ.title)
-                    .font(.title3.weight(.bold))
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
                 Text(organ.tagline)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.66))
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.62))
             }
         }
-        .padding(12)
-        .background(.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .padding(26)
+        .frame(maxWidth: .infinity)
+        .background(.black.opacity(isSelected ? 0.26 : 0.18), in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+        // Outer selection highlight
         .overlay {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .strokeBorder(.white.opacity(isSelected ? 0.12 : 0.06), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .strokeBorder(
+                    isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.10),
+                    lineWidth: isSelected ? 3 : 1
+                )
                 .allowsHitTesting(false)
         }
-        .scaleEffect(isSelected ? 1 : 0.94)
+        .shadow(color: isSelected ? organ.tint.opacity(0.40) : .black.opacity(0.20), radius: isSelected ? 34 : 14, y: 12)
+        .scaleEffect(isSelected ? 1.0 : 0.95)
+        .animation(.spring(response: 0.4, dampingFraction: 0.84), value: isSelected)
     }
 
     private var organPreview: some View {
@@ -283,11 +315,11 @@ private struct LauncherOrganCard: View {
                 model
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .scaleEffect(isSelected ? 1.16 : 0.92)
+                    .scaleEffect(isSelected ? 1.08 : 0.94)
                     .padding(20)
             case .failure:
                 Image(systemName: organ.symbolName)
-                    .font(.system(size: 40, weight: .bold))
+                    .font(.system(size: 56, weight: .bold))
                     .foregroundStyle(.white.opacity(0.86))
             @unknown default:
                 EmptyView()
@@ -339,6 +371,59 @@ private struct LauncherSelectionCard: View {
                 .allowsHitTesting(false)
         }
         .allowsHitTesting(false)
+    }
+}
+
+private struct TransitionIndicator: View {
+    let message: String
+    let tint: Color
+
+    @State private var pulse: Bool = false
+
+    var body: some View {
+        VStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .fill(tint.opacity(0.18))
+                    .frame(width: 96, height: 96)
+                    .blur(radius: 22)
+                    .scaleEffect(pulse ? 1.18 : 0.92)
+
+                Circle()
+                    .stroke(tint.opacity(0.42), lineWidth: 2)
+                    .frame(width: 64, height: 64)
+                    .scaleEffect(pulse ? 1.04 : 0.96)
+
+                Image(systemName: "visionpro")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+            }
+
+            VStack(spacing: 4) {
+                Text(message)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.92))
+                    .multilineTextAlignment(.center)
+
+                Text("This only takes a moment.")
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.58))
+            }
+        }
+        .padding(.horizontal, 36)
+        .padding(.vertical, 28)
+        .background(.black.opacity(0.32), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.30), radius: 24, y: 12)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                pulse = true
+            }
+        }
     }
 }
 

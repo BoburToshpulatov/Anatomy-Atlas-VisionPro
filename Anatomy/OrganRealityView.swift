@@ -24,6 +24,28 @@ struct OrganRealityView: View {
         return organ.atlasNotes.first(where: { $0.id == selectedAnnotationID })
     }
 
+    private var bundledModelScaleMultiplier: CGFloat {
+        switch organ.id {
+        case "heart":
+            0.72
+        case "brain":
+            0.52
+        default:
+            0.60
+        }
+    }
+
+    private var bundledFrameScale: CGSize {
+        switch organ.id {
+        case "heart":
+            CGSize(width: 0.72, height: 0.82)
+        case "brain":
+            CGSize(width: 0.62, height: 0.70)
+        default:
+            CGSize(width: 0.60, height: 0.74)
+        }
+    }
+
     var body: some View {
         GeometryReader { geometry in
             TimelineView(.animation) { timeline in
@@ -122,7 +144,7 @@ struct OrganRealityView: View {
                                 resolvedModel
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
-                                    .scaleEffect((organ.heroScale * 0.82) * focusScale * organPulse * (isHeroVisible ? 1 : 0.82))
+                                    .scaleEffect((organ.heroScale * bundledModelScaleMultiplier) * focusScale * organPulse * (isHeroVisible ? 1 : 0.82))
                                     .rotation3DEffect(.degrees(focusPitch), axis: (x: 1, y: 0, z: 0))
                                     .rotation3DEffect(.degrees(sway + focusYaw), axis: (x: 0, y: 1, z: 0))
                                     .offset(
@@ -162,10 +184,10 @@ struct OrganRealityView: View {
                                 EmptyView()
                             }
                         }
-                        .frame(width: geometry.size.width * 0.72, height: geometry.size.height * 0.86)
+                        .frame(width: geometry.size.width * bundledFrameScale.width, height: geometry.size.height * bundledFrameScale.height)
                     } else {
                         organPlaceholder(in: geometry, organPulse: organPulse, sway: sway, lift: lift, focusYaw: focusYaw, focusPitch: focusPitch, focusScale: focusScale, focusOffset: focusOffset)
-                            .frame(width: geometry.size.width * 0.40, height: geometry.size.height * 0.32)
+                            .frame(width: geometry.size.width * 0.36, height: geometry.size.height * 0.28)
                     }
 
                 }
@@ -234,7 +256,7 @@ struct OrganRealityView: View {
                     .foregroundStyle(organ.tint.opacity(0.92))
             }
         }
-        .scaleEffect((organ.heroScale * 0.86) * focusScale * organPulse * (isHeroVisible ? 1 : 0.82))
+        .scaleEffect((organ.heroScale * 0.76) * focusScale * organPulse * (isHeroVisible ? 1 : 0.82))
         .rotation3DEffect(.degrees(focusPitch), axis: (x: 1, y: 0, z: 0))
         .rotation3DEffect(.degrees(sway + focusYaw), axis: (x: 0, y: 1, z: 0))
         .offset(
@@ -303,40 +325,48 @@ struct AnnotationBubble: View {
     let isDimmed: Bool
     let tint: Color
 
-    var body: some View {
-        VStack(alignment: note.side == .left ? .leading : .trailing, spacing: 8) {
-            Text(note.title)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(.white.opacity(isDimmed ? 0.58 : 0.98))
-                .lineLimit(1)
+    private var alignment: HorizontalAlignment { note.side == .left ? .leading : .trailing }
+    private var frameAlignment: Alignment { note.side == .left ? .leading : .trailing }
 
+    var body: some View {
+        VStack(alignment: alignment, spacing: 7) {
+            // Title pill — coloured dot + structure name
+            HStack(spacing: 9) {
+                Circle()
+                    .fill(isSelected ? tint : tint.opacity(isDimmed ? 0.4 : 0.85))
+                    .frame(width: 9, height: 9)
+
+                Text(note.title)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white.opacity(isDimmed ? 0.56 : 0.98))
+                    .lineLimit(1)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 11)
+            .background(
+                Capsule()
+                    .fill(Color.black.opacity(isSelected ? 0.60 : isDimmed ? 0.40 : 0.52))
+            )
+            .overlay {
+                Capsule()
+                    .strokeBorder(
+                        isSelected ? tint.opacity(0.85) : isDimmed ? Color.white.opacity(0.05) : Color.white.opacity(0.14),
+                        lineWidth: isSelected ? 1.6 : 1.0
+                    )
+            }
+            .glassBackgroundEffect(in: Capsule())
+            .shadow(color: isSelected ? tint.opacity(0.28) : .black.opacity(0.18), radius: 10, y: 5)
+
+            // Description hanging below the pill (outside, like a medical callout)
             Text(note.subtitle)
-                .font(.body.weight(.medium))
-                .foregroundStyle(.white.opacity(isDimmed ? 0.50 : isSelected ? 0.84 : 0.70))
-                .lineLimit(3)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(isDimmed ? 0.34 : 0.66))
+                .lineLimit(2)
+                .multilineTextAlignment(note.side == .left ? .leading : .trailing)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 6)
         }
-        .frame(maxWidth: .infinity, alignment: note.side == .left ? .leading : .trailing)
-        .padding(.horizontal, 20)
-        .padding(.vertical, 18)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(
-                    isSelected
-                        ? Color.black.opacity(0.72)
-                        : isDimmed
-                            ? Color.black.opacity(0.56)
-                            : Color.black.opacity(0.66)
-                )
-        )
-        .scaleEffect(isSelected ? 1.03 : isDimmed ? 0.96 : 1)
-        .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(
-                    isSelected ? tint.opacity(0.82) : isDimmed ? Color.white.opacity(0.04) : Color.white.opacity(0.10),
-                    lineWidth: isSelected ? 1.35 : 1
-                )
-        }
-        .shadow(color: isSelected ? tint.opacity(0.18) : .black.opacity(0.12), radius: 18, y: 8)
-        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: frameAlignment)
+        .scaleEffect(isSelected ? 1.04 : isDimmed ? 0.97 : 1)
     }
 }

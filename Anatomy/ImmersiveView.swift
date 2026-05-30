@@ -10,25 +10,24 @@ import RealityKit
 import RealityKitContent
 
 private enum ImmersiveLayoutConfig {
-    static let topBarPosition = SIMD3<Float>(0.0, 1.94, -1.66)
-    static let topBarWidth: CGFloat = 360
-    static let auraSize: CGFloat = 1120
+    static let topBarPosition = SIMD3<Float>(0.0, 1.82, -1.30)
+    static let topBarWidth: CGFloat = 380
+    static let auraSize: CGFloat = 1180
     static let heroFrame = CGSize(width: 1440, height: 1100)
-    static let panelHeight: CGFloat = 900
+    static let panelHeight: CGFloat = 1040
     static let instructionOpacityWhenHidden = 0.001
-    static let carouselStackWidth: CGFloat = 1460
-    static let carouselFrameHeight: CGFloat = 224
-    static let bottomBarWidth: CGFloat = 292
-    static let bottomStackSpacing: CGFloat = 8
-    static let labelVerticalSpread: Float = 0.70
+    static let carouselStackWidth: CGFloat = 760
+    static let carouselFrameHeight: CGFloat = 250
+    static let bottomStackSpacing: CGFloat = 12
+    static let labelVerticalSpread: Float = 0.58
     static let labelSelectedLift: Float = 0.04
     static let labelIdleLift: Float = 0.008
     static let labelDimmedLift: Float = -0.012
-    static let labelDepthTilt: Float = 0.042
-    static let glowYOffset: Float = -0.33
+    static let labelDepthTilt: Float = 0.032
+    static let glowYOffset: Float = -0.40
     static let glowZOffset: Float = 0.02
-    static let organAnchorSpreadX: Float = 0.56
-    static let organAnchorSpreadY: Float = 0.62
+    static let organAnchorSpreadX: Float = 0.54
+    static let organAnchorSpreadY: Float = 0.60
     static let connectorDepthOffset: Float = -0.02
 }
 
@@ -44,19 +43,7 @@ struct ImmersiveView: View {
     @State private var isSwitchingOrgan = false
     @State private var viewerAngle: AnatomyOrgan.ViewerAngle = .front
 
-    private let carouselOrder = [
-        "brain",
-        "lungs",
-        "heart",
-        "liver",
-        "kidneys",
-        "stomach",
-        "skeleton",
-        "eye",
-        "ear",
-        "spine",
-        "intestines"
-    ]
+    private let carouselOrder = ["heart", "brain"]
     private let maxAnnotationSlots = 8
     private var selectedOrgan: AnatomyOrgan { appModel.selectedOrgan }
     private var selectedAnnotation: OrganAnnotation? { appModel.selectedAnnotation }
@@ -67,12 +54,36 @@ struct ImmersiveView: View {
         }
     }
     private var selectedIndex: Int { organs.firstIndex(where: { $0.id == appModel.selectedOrganID }) ?? 0 }
-    private var preset: AnatomyOrgan.ImmersivePreset { selectedOrgan.immersivePreset }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
     private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
     private var panelPosition: SIMD3<Float> { viewerLayout.panelPosition }
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
+    private var visibleAnnotationIDs: Set<String> {
+        guard appModel.selectedStudyMode == .labels else { return [] }
+        if appModel.selectedAnnotationID != nil {
+            return Set(selectedOrgan.atlasNotes.map(\.id))
+        }
+
+        switch selectedOrgan.id {
+        case "heart":
+            return [
+                "heart-aorta",
+                "heart-pulmonary-artery",
+                "heart-right-atrium",
+                "heart-left-ventricle"
+            ]
+        case "brain":
+            return [
+                "brain-frontal",
+                "brain-parietal",
+                "brain-temporal",
+                "brain-cerebellum"
+            ]
+        default:
+            return Set(selectedOrgan.atlasNotes.map(\.id))
+        }
+    }
     private var glowPosition: SIMD3<Float> {
         SIMD3<Float>(
             heartPosition.x,
@@ -97,14 +108,14 @@ struct ImmersiveView: View {
             }
 
             if let auraEntity = attachments.entity(for: "ambient-aura") {
-                auraEntity.position = heartPosition + SIMD3<Float>(0.0, 0.02, -0.06)
-                auraEntity.scale = [0.96, 0.96, 0.96]
+                auraEntity.position = heartPosition + SIMD3<Float>(0.0, 0.02, -0.10)
+                auraEntity.scale = [1.8, 1.8, 1.8]
                 content.add(auraEntity)
             }
 
             if let heroEntity = attachments.entity(for: "hero-stage") {
                 heroEntity.position = heartPosition
-                heroEntity.scale = [0.92, 0.92, 0.92]
+                heroEntity.scale = [1.55, 1.55, 1.55]
                 content.add(heroEntity)
             }
 
@@ -157,6 +168,7 @@ struct ImmersiveView: View {
             Attachment(id: "ambient-aura") {
                 ImmersiveAuraField(tint: selectedOrgan.tint, isVisible: backgroundGlowVisible)
                     .frame(width: ImmersiveLayoutConfig.auraSize, height: ImmersiveLayoutConfig.auraSize)
+                    .allowsHitTesting(false)   // decorative only — never intercept taps
             }
 
             Attachment(id: "hero-stage") {
@@ -171,6 +183,10 @@ struct ImmersiveView: View {
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
                 .scaleEffect(heroVisible ? 0.98 : 0.88)
+                // The hero organ is purely visual — all interaction happens through the
+                // label, panel and carousel attachments. Disabling hit testing on this
+                // large frame stops it from covering the carousel / panel tap areas.
+                .allowsHitTesting(false)
             }
 
             makeAnnotationAttachment(index: 0)
@@ -214,7 +230,12 @@ struct ImmersiveView: View {
                     onOpenLearnMore: appModel.openLearnMore,
                     onCloseLearnMore: appModel.closeLearnMore,
                     onSubmitQuizAnswer: appModel.submitQuizAnswer,
-                    onAdvanceQuiz: appModel.advanceQuiz
+                    onAdvanceQuiz: appModel.advanceQuiz,
+                    onStartQuiz: {
+                        withAnimation(.spring(response: 0.46, dampingFraction: 0.84)) {
+                            appModel.setStudyMode(.quiz)
+                        }
+                    }
                 )
                 .frame(width: viewerLayout.panelWidth, height: ImmersiveLayoutConfig.panelHeight)
                 .opacity(panelVisible ? 1 : 0.001)
@@ -224,11 +245,11 @@ struct ImmersiveView: View {
                 VStack(spacing: ImmersiveLayoutConfig.bottomStackSpacing) {
                     ImmersiveInstructionBar(mode: appModel.selectedStudyMode)
                         .opacity(labelsVisible || appModel.selectedStudyMode != .labels ? 1 : ImmersiveLayoutConfig.instructionOpacityWhenHidden)
+                        .allowsHitTesting(false)   // hint text — not a control
 
                     ImmersiveCarousel(
                         organs: organs,
                         selectedOrganID: appModel.selectedOrganID,
-                        preset: preset,
                         isVisible: carouselVisible,
                         canNavigateLeft: selectedIndex > 0,
                         canNavigateRight: selectedIndex < organs.count - 1,
@@ -237,20 +258,6 @@ struct ImmersiveView: View {
                         onNavigateRight: navigateRight
                     )
                     .frame(height: ImmersiveLayoutConfig.carouselFrameHeight)
-
-                    ImmersiveModeBar(
-                        items: modeTitles,
-                        selectedItem: appModel.selectedStudyMode.title,
-                        accent: selectedOrgan.tint,
-                        isCompact: true
-                    ) { mode in
-                        if let resolvedMode = AppModel.StudyMode.allCases.first(where: { $0.title == mode }) {
-                            withAnimation(.spring(response: 0.46, dampingFraction: 0.84)) {
-                                appModel.setStudyMode(resolvedMode)
-                            }
-                        }
-                    }
-                    .frame(width: ImmersiveLayoutConfig.bottomBarWidth)
                 }
                 .frame(width: ImmersiveLayoutConfig.carouselStackWidth)
             }
@@ -258,7 +265,8 @@ struct ImmersiveView: View {
         .animation(.spring(response: 0.62, dampingFraction: 0.86), value: appModel.selectedOrganID)
         .animation(.spring(response: 0.46, dampingFraction: 0.84), value: appModel.selectedAnnotationID)
         .onAppear {
-            appModel.selectOrgan(appModel.selectedOrganID.isEmpty ? AnatomyOrgan.featured[0].id : appModel.selectedOrganID)
+            appModel.constrainSelectionToMVP()
+            appModel.selectOrgan(appModel.selectedOrganID.isEmpty ? AnatomyOrgan.launcherFeatured[0].id : appModel.selectedOrganID)
             runLaunchSequenceIfNeeded()
         }
         .onChange(of: appModel.selectedOrganID) { _, newValue in
@@ -414,7 +422,7 @@ struct ImmersiveView: View {
                 bubbleWidth: viewerLayout.labelWidth,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
-                isVisible: labelsVisible,
+                isVisible: labelsVisible && visibleAnnotationIDs.contains(note.id),
                 delay: Double(index) * 0.07,
                 selectedZOffset: viewerLayout.labelSelectedZ,
                 restZOffset: viewerLayout.labelRestZ,
@@ -434,7 +442,7 @@ struct ImmersiveView: View {
                 tint: selectedOrgan.tint,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
-                isVisible: labelsVisible,
+                isVisible: labelsVisible && visibleAnnotationIDs.contains(note.id),
                 deltaX: layout.deltaX,
                 deltaY: layout.deltaY
             )
@@ -450,7 +458,7 @@ struct ImmersiveView: View {
                 tint: selectedOrgan.tint,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
-                isVisible: labelsVisible
+                isVisible: labelsVisible && visibleAnnotationIDs.contains(note.id)
             )
         } else {
             EmptyView()
@@ -607,14 +615,14 @@ private struct ImmersiveModeBar: View {
     let onSelect: (String) -> Void
 
     var body: some View {
-        HStack(spacing: isCompact ? 12 : 14) {
+        HStack(spacing: isCompact ? 8 : 10) {
             ForEach(items, id: \.self) { item in
                 Button(action: { onSelect(item) }) {
                     Text(item)
-                        .font((isCompact ? Font.body : .title3).weight(item == selectedItem ? .bold : .medium))
-                        .foregroundStyle(.white.opacity(item == selectedItem ? 0.98 : 0.72))
-                        .padding(.horizontal, isCompact ? 20 : 26)
-                        .padding(.vertical, isCompact ? 16 : 18)
+                        .font((isCompact ? Font.subheadline : .body).weight(item == selectedItem ? .semibold : .medium))
+                        .foregroundStyle(.white.opacity(item == selectedItem ? 0.96 : 0.60))
+                        .padding(.horizontal, isCompact ? 16 : 20)
+                        .padding(.vertical, isCompact ? 10 : 12)
                         .background {
                             if item == selectedItem {
                                 Capsule()
@@ -622,7 +630,7 @@ private struct ImmersiveModeBar: View {
                                         LinearGradient(
                                             colors: [
                                                 accent.opacity(0.34),
-                                                .white.opacity(0.10)
+                                                .white.opacity(0.06)
                                             ],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
@@ -634,15 +642,15 @@ private struct ImmersiveModeBar: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, isCompact ? 16 : 18)
-        .padding(.vertical, isCompact ? 14 : 14)
-        .background(.black.opacity(0.52), in: Capsule())
+        .padding(.horizontal, isCompact ? 8 : 10)
+        .padding(.vertical, isCompact ? 7 : 7)
+        .background(.black.opacity(0.42), in: Capsule())
         .glassBackgroundEffect(in: Capsule())
         .overlay {
             Capsule()
-                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+                .strokeBorder(.white.opacity(0.08), lineWidth: 1)
         }
-        .shadow(color: .black.opacity(0.22), radius: 24, y: 12)
+        .shadow(color: .black.opacity(0.18), radius: 14, y: 7)
     }
 }
 
@@ -652,16 +660,16 @@ private struct ImmersiveInstructionBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: iconName)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.86))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white.opacity(0.82))
 
             Text(message)
-                .font(.body.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.74))
         }
-        .padding(.horizontal, 26)
-        .padding(.vertical, 16)
-        .premiumImmersiveCard(cornerRadius: 999, fillOpacity: 0.30, borderOpacity: 0.09)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 11)
+        .premiumImmersiveCard(cornerRadius: 999, fillOpacity: 0.22, borderOpacity: 0.07)
     }
 
     private var iconName: String {
@@ -731,71 +739,104 @@ private struct ImmersiveHeroStage: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            organ.tint.opacity(0.18),
-                            organ.tint.opacity(0.06),
-                            .clear
-                        ],
-                        center: .center,
-                        startRadius: 40,
-                        endRadius: 190
-                    )
-                )
-                .frame(width: 420, height: 420)
-                .blur(radius: 34)
-                .opacity(isGlowVisible ? 0.92 : 0)
-
-            Circle()
-                .stroke(organ.tint.opacity(0.20), lineWidth: 6)
-                .frame(width: 420, height: 420)
-                .blur(radius: 22)
-                .opacity(isGlowVisible ? 0.68 : 0)
-
-            Circle()
-                .stroke(Color.cyan.opacity(0.15), lineWidth: 1.4)
-                .frame(width: 510, height: 510)
-                .blur(radius: 10)
-                .opacity(isGlowVisible ? 0.54 : 0)
-
-            Ellipse()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color.cyan.opacity(0.16),
+                            organ.tint.opacity(0.34),
                             organ.tint.opacity(0.12),
                             .clear
                         ],
                         center: .center,
-                        startRadius: 18,
-                        endRadius: 160
+                        startRadius: 24,
+                        endRadius: 200
                     )
                 )
-                .frame(width: preset.floorGlowWidth, height: preset.floorGlowHeight)
-                .blur(radius: 18)
-                .offset(y: preset.stageHeight * 0.26)
-                .offset(z: -36)
-                .opacity(isGlowVisible ? 0.82 : 0)
+                .frame(width: 440, height: 440)
+                .blur(radius: 32)
+                .opacity(isGlowVisible ? 0.92 : 0)
 
-            ForEach(0..<18, id: \.self) { index in
-                Circle()
-                    .fill(index.isMultiple(of: 2) ? organ.tint.opacity(0.30) : Color.cyan.opacity(0.20))
-                    .frame(width: index.isMultiple(of: 3) ? 3.5 : 2.2, height: index.isMultiple(of: 3) ? 3.5 : 2.2)
-                    .blur(radius: 0.8)
-                    .offset(
-                        x: CGFloat(cos(Double(index) * 0.70)) * (index.isMultiple(of: 2) ? 220 : 170),
-                        y: CGFloat(sin(Double(index) * 0.82)) * (index.isMultiple(of: 2) ? 150 : 110)
+            Circle()
+                .stroke(organ.tint.opacity(0.28), lineWidth: 3)
+                .frame(width: 400, height: 400)
+                .blur(radius: 14)
+                .opacity(isGlowVisible ? 0.72 : 0)
+
+            Circle()
+                .stroke(Color.white.opacity(0.08), lineWidth: 1.2)
+                .frame(width: 500, height: 500)
+                .blur(radius: 6)
+                .opacity(isGlowVisible ? 0.48 : 0)
+
+            // Museum study pedestal — layered concentric rings under organ
+            Group {
+                // Outermost soft glow disc
+                Ellipse()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                organ.tint.opacity(0.18),
+                                organ.tint.opacity(0.06),
+                                .clear
+                            ],
+                            center: .center,
+                            startRadius: 20,
+                            endRadius: 240
+                        )
                     )
-                    .opacity(isGlowVisible ? 0.48 : 0)
+                    .frame(width: preset.floorGlowWidth * 1.05, height: preset.floorGlowHeight * 1.05)
+                    .blur(radius: 18)
+
+                // Outer ring
+                Ellipse()
+                    .stroke(.white.opacity(0.10), lineWidth: 1.2)
+                    .frame(width: preset.floorGlowWidth * 0.92, height: preset.floorGlowHeight * 0.84)
+                    .blur(radius: 0.6)
+
+                // Mid ring with tint
+                Ellipse()
+                    .stroke(organ.tint.opacity(0.22), lineWidth: 1.4)
+                    .frame(width: preset.floorGlowWidth * 0.72, height: preset.floorGlowHeight * 0.62)
+                    .blur(radius: 0.8)
+
+                // Inner ring — closest to organ base
+                Ellipse()
+                    .stroke(.white.opacity(0.18), lineWidth: 1.1)
+                    .frame(width: preset.floorGlowWidth * 0.54, height: preset.floorGlowHeight * 0.42)
+
+                // Bright tint pool at centre (reflection from organ)
+                Ellipse()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                organ.tint.opacity(0.32),
+                                organ.tint.opacity(0.12),
+                                .clear
+                            ],
+                            center: .center,
+                            startRadius: 4,
+                            endRadius: 120
+                        )
+                    )
+                    .frame(width: preset.floorGlowWidth * 0.42, height: preset.floorGlowHeight * 0.30)
+                    .blur(radius: 10)
             }
+            .offset(y: preset.stageHeight * 0.28)
+            .offset(z: -44)
+            .opacity(isGlowVisible ? 1 : 0)
 
-            Ellipse()
-                .stroke(.white.opacity(0.07), lineWidth: 1)
-                .frame(width: 560, height: 430)
-                .opacity(isGlowVisible ? 0.44 : 0)
-
-            Ellipse()
-                .stroke(Color.cyan.opacity(0.20), style: StrokeStyle(lineWidth: 1.6, dash: [8, 12]))
-                .frame(width: 680, height: 520)
-                .opacity(isGlowVisible ? 0.24 : 0)
+            // Warm cinematic key light — upper-left bias
+            RadialGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.86, blue: 0.72).opacity(0.18),
+                    Color(red: 1.0, green: 0.78, blue: 0.62).opacity(0.06),
+                    .clear
+                ],
+                center: UnitPoint(x: 0.18, y: 0.22),
+                startRadius: 30,
+                endRadius: 360
+            )
+            .frame(width: 720, height: 540)
+            .blur(radius: 24)
+            .blendMode(.screen)
+            .opacity(isGlowVisible ? 0.78 : 0)
+            .allowsHitTesting(false)
 
             OrganRealityView(
                 organ: organ,
@@ -807,7 +848,7 @@ private struct ImmersiveHeroStage: View {
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .shadow(color: organ.tint.opacity(0.18), radius: 48, y: 24)
+        .shadow(color: organ.tint.opacity(0.14), radius: 34, y: 18)
     }
 }
 
@@ -831,7 +872,7 @@ private struct SpatialAnnotationAttachment: View {
             .opacity(Double(revealAmount) * (isDimmed ? 0.56 : 1))
             .offset(y: (1 - revealAmount) * 10)
             .offset(z: isSelected ? selectedZOffset : isDimmed ? restZOffset - 18 : restZOffset)
-            .scaleEffect(isSelected ? 1.02 : isDimmed ? 0.96 : 1.0)
+            .scaleEffect(isSelected ? 1.015 : isDimmed ? 0.97 : 1.0)
             .animation(.spring(response: 0.50, dampingFraction: 0.82).delay(delay), value: isVisible)
             .contentShape(Rectangle())
             .allowsHitTesting(isVisible)
@@ -861,27 +902,32 @@ private struct SpatialConnectorAttachment: View {
     let deltaY: CGFloat
 
     var body: some View {
-        let width = max(abs(deltaX) + 44, 120)
-        let height = max(abs(deltaY) + 34, 64)
+        let width = max(abs(deltaX) + 36, 104)
+        let height = max(abs(deltaY) + 28, 56)
         let pulse = isSelected ? 1.0 : 0.92
 
         Canvas { context, size in
-            let start = CGPoint(x: side == .left ? size.width - 10 : 10, y: size.height * 0.5)
+            // Anatomy callout: anchor-side edge → horizontal run to label x → vertical drop to label end
+            let anchorX: CGFloat = side == .left ? size.width - 8 : 8
+            let labelX: CGFloat  = side == .left ? 8 : size.width - 8
             let labelAbove = deltaY < 0
-            let endY = labelAbove ? 14 : size.height - 14
-            let end = CGPoint(x: side == .left ? 14 : size.width - 14, y: endY)
-            let elbow = CGPoint(x: side == .left ? size.width * 0.58 : size.width * 0.42, y: start.y)
+            let labelY: CGFloat  = labelAbove ? 10 : size.height - 10
+
+            let start  = CGPoint(x: anchorX, y: size.height * 0.5)
+            let elbow  = CGPoint(x: labelX,  y: size.height * 0.5)   // horizontal first
+            let end    = CGPoint(x: labelX,  y: labelY)               // then vertical
 
             var path = Path()
             path.move(to: start)
             path.addLine(to: elbow)
             path.addLine(to: end)
 
-            let colors: [Color] = isSelected
-                ? [tint.opacity(0.94), .white.opacity(0.88)]
-                : isDimmed
-                    ? [.white.opacity(0.10), .white.opacity(0.02)]
-                    : [.white.opacity(0.22), .white.opacity(0.05)]
+            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.24 : 0.68
+            let lineColor: Color = isSelected ? tint : .white
+            let colors: [Color] = [
+                lineColor.opacity(baseOpacity),
+                lineColor.opacity(baseOpacity * 0.55)
+            ]
             let gradient = Gradient(colors: side == .left ? colors : colors.reversed())
 
             context.stroke(
@@ -891,7 +937,7 @@ private struct SpatialConnectorAttachment: View {
                     startPoint: CGPoint(x: 0, y: size.height * 0.5),
                     endPoint: CGPoint(x: size.width, y: size.height * 0.5)
                 ),
-                style: StrokeStyle(lineWidth: isSelected ? 1.2 * pulse : 0.72, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.4, lineCap: .round, lineJoin: .round)
             )
         }
         .frame(width: width, height: height)
@@ -907,19 +953,26 @@ private struct SpatialAnchorDot: View {
     let isVisible: Bool
 
     var body: some View {
-        Circle()
-            .fill(isSelected ? tint : isDimmed ? .white.opacity(0.18) : .white.opacity(0.62))
-            .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
-            .shadow(color: isSelected ? tint.opacity(0.40) : .white.opacity(0.14), radius: isSelected ? 10 : 4)
-            .opacity(isVisible ? 1 : 0.001)
-            .allowsHitTesting(false)
+        ZStack {
+            if isSelected {
+                Circle()
+                    .fill(tint.opacity(0.32))
+                    .frame(width: 26, height: 26)
+                    .blur(radius: 6)
+            }
+            Circle()
+                .fill(isSelected ? tint : isDimmed ? .white.opacity(0.26) : .white.opacity(0.80))
+                .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
+                .shadow(color: isSelected ? tint.opacity(0.55) : .clear, radius: isSelected ? 8 : 0)
+        }
+        .opacity(isVisible ? 1 : 0.001)
+        .allowsHitTesting(false)
     }
 }
 
 private struct ImmersiveCarousel: View {
     let organs: [AnatomyOrgan]
     let selectedOrganID: String
-    let preset: AnatomyOrgan.ImmersivePreset
     let isVisible: Bool
     let canNavigateLeft: Bool
     let canNavigateRight: Bool
@@ -928,122 +981,112 @@ private struct ImmersiveCarousel: View {
     let onNavigateRight: () -> Void
 
     var body: some View {
-        ZStack {
-            HStack {
+        VStack(spacing: 14) {
+            // Unified selector tray — arrows integrated with the cards
+            HStack(spacing: 18) {
                 ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
-                Spacer()
-                ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
-            }
-            .padding(.horizontal, 56)
 
-            ZStack {
-                ForEach(Array(organs.enumerated()), id: \.element.id) { index, organ in
-                    let offset = cardOffset(for: index)
-                    ImmersiveCarouselCard(
-                        organ: organ,
-                        isSelected: organ.id == selectedOrganID,
-                        distanceFromSelection: offset
-                    )
-                    .onTapGesture {
-                        onSelect(organ.id)
+                HStack(spacing: 16) {
+                    ForEach(organs) { organ in
+                        ImmersiveCarouselCard(
+                            organ: organ,
+                            isSelected: organ.id == selectedOrganID
+                        )
+                        .onTapGesture {
+                            onSelect(organ.id)
+                        }
                     }
                 }
+                .padding(.horizontal, 6)
+
+                ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
             }
-            .frame(height: 150)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 34, style: .continuous)
+                    .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+            }
+            .shadow(color: .black.opacity(0.24), radius: 20, y: 10)
+
+            // Page indicator dots
+            HStack(spacing: 8) {
+                ForEach(organs) { organ in
+                    Capsule()
+                        .fill(.white.opacity(organ.id == selectedOrganID ? 0.92 : 0.30))
+                        .frame(
+                            width: organ.id == selectedOrganID ? 20 : 7,
+                            height: 7
+                        )
+                        .animation(.spring(response: 0.4, dampingFraction: 0.84), value: selectedOrganID)
+                }
+            }
         }
         .opacity(isVisible ? 1 : 0)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
-        .rotation3DEffect(.degrees(8), axis: (x: 1, y: 0, z: 0))
-        .offset(z: 22)
-    }
-
-    private func cardOffset(for index: Int) -> Int {
-        guard let selectedIndex = organs.firstIndex(where: { $0.id == selectedOrganID }) else {
-            return 0
-        }
-        return index - selectedIndex
+        .padding(.vertical, 2)
+        .offset(z: 10)
     }
 }
 
 private struct ImmersiveCarouselCard: View {
     let organ: AnatomyOrgan
     let isSelected: Bool
-    let distanceFromSelection: Int
 
     var body: some View {
-        let absoluteDistance = abs(distanceFromSelection)
-        let arcLift = CGFloat(absoluteDistance) * 16
-        let depthScale = max(0.72, 1 - CGFloat(absoluteDistance) * 0.07)
-        let cardOpacity = isSelected ? 1.0 : max(0.38, 0.76 - Double(absoluteDistance) * 0.08)
-
-        VStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
+        VStack(spacing: 10) {
+            Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                switch phase {
+                case .empty:
+                    ProgressView().tint(.white.opacity(0.9))
+                case .success(let model):
+                    model
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .scaleEffect(isSelected ? 1.08 : 0.88)
+                        .padding(14)
+                case .failure:
+                    Image(systemName: organ.symbolName)
+                        .font(.system(size: isSelected ? 38 : 30, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.8))
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .frame(width: 158, height: 122)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [
-                                organ.tint.opacity(isSelected ? 0.46 : 0.08),
-                                .white.opacity(isSelected ? 0.10 : 0.02),
-                                .black.opacity(0.32)
-                            ],
+                            colors: isSelected
+                                ? [organ.tint.opacity(0.46), organ.tint.opacity(0.18), .black.opacity(0.42)]
+                                : [.white.opacity(0.10), .black.opacity(0.48)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-
-                Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView().tint(.white.opacity(0.9))
-                    case .success(let model):
-                        model
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .scaleEffect(isSelected ? 1.12 : 0.80)
-                            .rotation3DEffect(.degrees(Double(distanceFromSelection) * -18), axis: (x: 0, y: 1, z: 0))
-                            .blur(radius: isSelected ? 0 : CGFloat(absoluteDistance) * 0.55)
-                            .padding(14)
-                    case .failure:
-                        Image(systemName: organ.symbolName)
-                            .font(.system(size: isSelected ? 40 : 32, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-            }
-            .frame(width: isSelected ? 170 : 124, height: isSelected ? 132 : 92)
+            )
             .overlay {
-                RoundedRectangle(cornerRadius: 26, style: .continuous)
-                    .strokeBorder(isSelected ? organ.tint.opacity(0.92) : .white.opacity(0.08), lineWidth: isSelected ? 1.6 : 1)
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.12), lineWidth: isSelected ? 2.5 : 1)
             }
-                    .shadow(color: organ.tint.opacity(isSelected ? 0.30 : 0.06), radius: isSelected ? 22 : 8, y: isSelected ? 12 : 5)
-            .overlay {
-                if isSelected {
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .strokeBorder(.white.opacity(0.10), lineWidth: 4)
-                        .blur(radius: 12)
-                }
-            }
-            .offset(z: isSelected ? 62 : CGFloat(-absoluteDistance * 30))
+            .shadow(color: isSelected ? organ.tint.opacity(0.44) : .black.opacity(0.18), radius: isSelected ? 24 : 8, y: isSelected ? 10 : 4)
 
-            VStack(spacing: 4) {
+            VStack(spacing: 3) {
                 Text(organ.title)
-                    .font(isSelected ? .subheadline.weight(.bold) : .caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.98 : 0.78))
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.white.opacity(isSelected ? 0.99 : 0.80))
 
                 Text(organ.tagline)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.74 : 0.56))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(isSelected ? organ.tint.opacity(0.92) : .white.opacity(0.52))
             }
         }
-        .opacity(cardOpacity)
-        .scaleEffect(isSelected ? 1.12 : depthScale)
-        .rotation3DEffect(.degrees(Double(distanceFromSelection) * -20), axis: (x: 0, y: 1, z: 0))
-        .offset(x: CGFloat(distanceFromSelection) * 150, y: isSelected ? -8 : arcLift)
-        .offset(z: isSelected ? 52 : CGFloat(-absoluteDistance * 26))
-        .zIndex(isSelected ? 20 : Double(10 - absoluteDistance))
+        .frame(width: 184)
+        .scaleEffect(isSelected ? 1.07 : 0.96)
+        .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
     }
 }
 
@@ -1067,19 +1110,20 @@ private struct ImmersiveNavButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: direction.symbolName)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(.white.opacity(isEnabled ? 0.92 : 0.34))
-                .frame(width: 58, height: 58)
-                .background(.black.opacity(isEnabled ? 0.18 : 0.06), in: Circle())
+                .font(.body.weight(.bold))
+                .foregroundStyle(.white.opacity(isEnabled ? 0.92 : 0.30))
+                .frame(width: 48, height: 48)
+                .background(.black.opacity(isEnabled ? 0.12 : 0.04), in: Circle())
                 .glassBackgroundEffect(in: Circle())
                 .overlay {
                     Circle()
-                        .strokeBorder(.white.opacity(isEnabled ? 0.12 : 0.05), lineWidth: 1)
+                        .strokeBorder(.white.opacity(isEnabled ? 0.10 : 0.04), lineWidth: 0.8)
                 }
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-        .offset(z: 32)
+        .opacity(isEnabled ? 1 : 0.3)
+        .offset(z: 24)
     }
 }
 
@@ -1099,14 +1143,15 @@ private struct ImmersiveInfoPanel: View {
     let onCloseLearnMore: () -> Void
     let onSubmitQuizAnswer: (Int) -> Void
     let onAdvanceQuiz: () -> Void
+    let onStartQuiz: () -> Void
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .center) {
                         Text(organ.title)
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
 
                         Spacer()
@@ -1121,6 +1166,7 @@ private struct ImmersiveInfoPanel: View {
                     Text(organ.description)
                         .font(.title3.weight(.medium))
                         .foregroundStyle(.white.opacity(0.84))
+                        .lineLimit(4)
                 }
 
                 ProgressCard(progressFraction: progressFraction, progressText: progressText, tint: organ.tint)
@@ -1131,7 +1177,7 @@ private struct ImmersiveInfoPanel: View {
 
                 switch studyMode {
                 case .explore:
-                    ImmersiveStudySection(title: "Functions", items: organ.functions, tint: organ.tint)
+                    ImmersiveStudySection(title: "Key Functions", items: organ.functions, tint: organ.tint, symbols: organ.functionSymbols)
                     ImmersiveStudySection(title: "Key Parts", items: organ.keyParts, tint: organ.tint)
                     StructureListSection(
                         notes: organ.atlasNotes,
@@ -1176,48 +1222,73 @@ private struct ImmersiveInfoPanel: View {
                 }
 
                 if studyMode != .quiz {
-                    Button(action: {
-                        isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
-                    }) {
-                        HStack {
-                            Label(isLearnMorePresented ? "Close Learn More" : "Learn More", systemImage: isLearnMorePresented ? "xmark.circle" : "arrow.right.circle")
-                                .font(.title2.weight(.semibold))
-
-                            Spacer()
-
-                            Image(systemName: isLearnMorePresented ? "chevron.down" : "arrow.right")
-                                .font(.title3.weight(.bold))
+                    VStack(spacing: 12) {
+                        // Primary: Start Quiz (filled, tinted)
+                        Button(action: onStartQuiz) {
+                            HStack(spacing: 10) {
+                                Spacer()
+                                Image(systemName: "questionmark.circle.fill")
+                                    .font(.headline.weight(.bold))
+                                Text("Start Quiz")
+                                    .font(.headline.weight(.bold))
+                                Spacer()
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.vertical, 15)
+                            .background(
+                                LinearGradient(
+                                    colors: [organ.tint.opacity(0.92), organ.tint.opacity(0.74)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                in: Capsule()
+                            )
+                            .shadow(color: organ.tint.opacity(0.34), radius: 14, y: 6)
                         }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 16)
-                        .background(.black.opacity(0.22), in: Capsule())
-                        .overlay {
-                            Capsule()
-                                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+                        .buttonStyle(.plain)
+
+                        // Secondary: Learn More (outline)
+                        Button(action: {
+                            isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
+                        }) {
+                            HStack(spacing: 10) {
+                                Spacer()
+                                Image(systemName: isLearnMorePresented ? "xmark.circle" : "book")
+                                    .font(.subheadline.weight(.semibold))
+                                Text(isLearnMorePresented ? "Close" : "Learn More")
+                                    .font(.headline.weight(.semibold))
+                                Spacer()
+                            }
+                            .foregroundStyle(.white.opacity(0.92))
+                            .padding(.vertical, 14)
+                            .background(.white.opacity(0.06), in: Capsule())
+                            .overlay {
+                                Capsule()
+                                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                            }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
-            .padding(32)
+            .padding(26)
         }
         .scrollIndicators(.hidden)
         .background(
             LinearGradient(
                 colors: [
-                    .black.opacity(0.92),
-                    .black.opacity(0.80),
-                    organ.tint.opacity(0.12)
+                    .black.opacity(0.86),
+                    .black.opacity(0.74),
+                    organ.tint.opacity(0.10)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 38, style: .continuous)
+            )
         )
-        .premiumImmersiveCard(cornerRadius: 38, fillOpacity: 0.10, borderOpacity: 0.10)
-        .shadow(color: .black.opacity(0.34), radius: 34, y: 18)
-        .rotation3DEffect(.degrees(-12), axis: (x: 0, y: 1, z: 0))
+        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .premiumImmersiveCard(cornerRadius: 32, fillOpacity: 0.08, borderOpacity: 0.09)
+        .shadow(color: .black.opacity(0.30), radius: 26, y: 14)
+        .rotation3DEffect(.degrees(-6), axis: (x: 0, y: 1, z: 0))
     }
 }
 
@@ -1225,24 +1296,36 @@ private struct ImmersiveStudySection: View {
     let title: String
     let items: [String]
     let tint: Color
+    var symbols: [String] = []
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.88))
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.white.opacity(0.80))
+                .textCase(.uppercase)
+                .tracking(0.6)
 
-            ForEach(items, id: \.self) { item in
-                HStack(alignment: .top, spacing: 10) {
-                    Circle()
-                        .fill(tint.opacity(0.92))
-                        .frame(width: 8, height: 8)
-                        .padding(.top, 6)
+            ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                HStack(alignment: .top, spacing: 12) {
+                    if let symbol = symbols[safe: index] {
+                        Image(systemName: symbol)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(tint.opacity(0.92))
+                            .frame(width: 26, height: 26)
+                            .padding(.top, 1)
+                    } else {
+                        Circle()
+                            .fill(tint.opacity(0.92))
+                            .frame(width: 8, height: 8)
+                            .padding(.top, 8)
+                    }
 
                     Text(item)
                         .font(.title3.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.82))
+                        .foregroundStyle(.white.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
@@ -1258,21 +1341,21 @@ private struct ProgressCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Progress")
-                    .font(.title2.weight(.semibold))
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.88))
 
                 Spacer()
 
                 Text(progressText)
-                    .font(.headline.weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(tint.opacity(0.96))
             }
 
             ProgressView(value: progressFraction)
                 .tint(tint)
         }
-        .padding(18)
-        .premiumImmersiveCard(cornerRadius: 24, fillOpacity: 0.16, borderOpacity: 0.08)
+        .padding(16)
+        .premiumImmersiveCard(cornerRadius: 22, fillOpacity: 0.14, borderOpacity: 0.08)
     }
 }
 
@@ -1296,8 +1379,8 @@ private struct AvailabilityCard: View {
                     .foregroundStyle(.white.opacity(0.74))
             }
         }
-        .padding(18)
-        .premiumImmersiveCard(cornerRadius: 24, fillOpacity: 0.16, borderOpacity: 0.08)
+        .padding(16)
+        .premiumImmersiveCard(cornerRadius: 22, fillOpacity: 0.14, borderOpacity: 0.08)
     }
 }
 
@@ -1310,7 +1393,7 @@ private struct PinnedStructureCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Pinned Structure")
-                    .font(.title2.weight(.semibold))
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.88))
 
                 Spacer()
@@ -1331,22 +1414,22 @@ private struct PinnedStructureCard: View {
             if let annotation {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(annotation.title)
-                        .font(.title2.weight(.bold))
+                        .font(.title3.weight(.bold))
 
                     Text(annotation.subtitle)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(tint.opacity(0.95))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(tint.opacity(0.96))
 
                     Text(annotation.detail)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.84))
+                        .font(.callout.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.86))
                 }
-                .padding(20)
-                .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 26, style: .continuous))
-                .premiumImmersiveCard(cornerRadius: 26, fillOpacity: 0.08, borderOpacity: 0.12)
+                .padding(18)
+                .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .premiumImmersiveCard(cornerRadius: 22, fillOpacity: 0.06, borderOpacity: 0.10)
             } else {
                 Text("Select a floating label to focus on a specific structure.")
-                    .font(.title3.weight(.medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.white.opacity(0.68))
                     .padding(.vertical, 4)
             }
@@ -1361,19 +1444,31 @@ private struct StructureListSection: View {
     let emptyMessage: String
     let onSelect: (String) -> Void
 
+    @State private var isExpanded = false
+    private let collapsedLimit = 5
+
+    private var visibleNotes: [OrganAnnotation] {
+        if isExpanded || notes.count <= collapsedLimit {
+            return notes
+        }
+        return Array(notes.prefix(collapsedLimit))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Structures")
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.88))
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.white.opacity(0.80))
+                .textCase(.uppercase)
+                .tracking(0.6)
 
             if notes.isEmpty {
                 Text(emptyMessage)
-                    .font(.body.weight(.medium))
+                    .font(.callout.weight(.medium))
                     .foregroundStyle(.white.opacity(0.64))
                     .padding(.vertical, 6)
             } else {
-                ForEach(notes) { note in
+                ForEach(visibleNotes) { note in
                     ImmersiveAnnotationRow(
                         note: note,
                         tint: tint,
@@ -1382,6 +1477,34 @@ private struct StructureListSection: View {
                     .onTapGesture {
                         onSelect(note.id)
                     }
+                }
+
+                if notes.count > collapsedLimit {
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.86)) {
+                            isExpanded.toggle()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(tint.opacity(0.9))
+                                .frame(width: 6, height: 6)
+                            Text(isExpanded ? "Show less" : "View all (\(notes.count))")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(tint.opacity(0.96))
+                            Spacer()
+                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(tint.opacity(0.8))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(Color.black.opacity(0.18))
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -1399,22 +1522,24 @@ private struct QuizSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Quiz")
-                .font(.title2.weight(.semibold))
+                .font(.headline.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.88))
 
             if let question {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(question.title)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(organ.tint.opacity(0.96))
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(organ.tint.opacity(0.94))
+                        .textCase(.uppercase)
+                        .tracking(0.6)
 
                     Text(question.prompt)
-                        .font(.title2.weight(.bold))
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
 
-                    Text("Select the structure that best matches the prompt. Use the floating labels or the structure list to inspect anatomy before you answer.")
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.72))
+                    Text("Select the structure that best matches the prompt.")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.68))
 
                     VStack(spacing: 12) {
                         ForEach(Array(question.answers.enumerated()), id: \.offset) { index, answer in
@@ -1448,11 +1573,11 @@ private struct QuizSection: View {
                         .tint(organ.tint)
                     }
                 }
-                .padding(22)
-                .premiumImmersiveCard(cornerRadius: 26, fillOpacity: 0.16, borderOpacity: 0.08)
+                .padding(20)
+                .premiumImmersiveCard(cornerRadius: 24, fillOpacity: 0.14, borderOpacity: 0.08)
             } else {
                 Text(organ.hasBundledModel ? "Choose Heart or Brain to begin the structure quiz." : "Quiz content for this organ is coming soon.")
-                    .font(.title3.weight(.medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(.white.opacity(0.74))
             }
         }
@@ -1506,16 +1631,16 @@ private struct QuizAnswerButton: View {
                     .frame(width: 12, height: 12)
 
                 Text(answer)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.92))
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.94))
 
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 11)
+            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .strokeBorder(borderColor, lineWidth: 1)
             }
         }
@@ -1557,12 +1682,12 @@ private struct LearnMoreSection: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.title2.weight(.bold))
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
 
                     Text(subtitle)
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(tint.opacity(0.92))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(tint.opacity(0.94))
                 }
 
                 Spacer()
@@ -1576,25 +1701,25 @@ private struct LearnMoreSection: View {
             }
 
             Text(bodyText)
-                .font(.body.weight(.medium))
+                .font(.callout.weight(.medium))
                 .foregroundStyle(.white.opacity(0.82))
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 ForEach(highlights, id: \.self) { item in
-                    HStack(alignment: .top, spacing: 10) {
+                    HStack(alignment: .top, spacing: 8) {
                         Circle()
-                            .fill(tint.opacity(0.92))
-                            .frame(width: 7, height: 7)
-                            .padding(.top, 7)
+                            .fill(tint.opacity(0.86))
+                            .frame(width: 5, height: 5)
+                            .padding(.top, 5)
 
                         Text(item)
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(.white.opacity(0.76))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.74))
                     }
                 }
             }
         }
-        .padding(22)
+        .padding(20)
         .background(
             LinearGradient(
                 colors: [
@@ -1604,9 +1729,9 @@ private struct LearnMoreSection: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             ),
-            in: RoundedRectangle(cornerRadius: 28, style: .continuous)
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
         )
-        .premiumImmersiveCard(cornerRadius: 28, fillOpacity: 0.10, borderOpacity: 0.12)
+        .premiumImmersiveCard(cornerRadius: 24, fillOpacity: 0.08, borderOpacity: 0.10)
     }
 }
 
@@ -1618,29 +1743,33 @@ private struct ImmersiveAnnotationRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             Circle()
-                .fill(isSelected ? tint : .white.opacity(0.28))
+                .fill(isSelected ? tint : .white.opacity(0.32))
                 .frame(width: 8, height: 8)
                 .padding(.top, 6)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(note.title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.96 : 0.82))
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(isSelected ? 0.98 : 0.90))
 
                 Text(note.subtitle)
-                    .font(.body)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white.opacity(0.66))
             }
 
             Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(isSelected ? tint.opacity(0.9) : .white.opacity(0.42))
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.vertical, 13)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(isSelected ? tint.opacity(0.16) : Color.black.opacity(0.28))
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(isSelected ? tint.opacity(0.16) : Color.black.opacity(0.20))
         )
-        .premiumImmersiveCard(cornerRadius: 20, fillOpacity: 0.10, borderOpacity: isSelected ? 0.12 : 0.06)
+        .premiumImmersiveCard(cornerRadius: 16, fillOpacity: 0.06, borderOpacity: isSelected ? 0.12 : 0.05)
     }
 }
 
@@ -1650,55 +1779,57 @@ private struct ImmersiveAuraField: View {
 
     var body: some View {
         ZStack {
+            // Deep dark backdrop — makes organ pop against the room
             Circle()
                 .fill(
                     RadialGradient(
                         colors: [
-                            .black.opacity(0.66),
-                            .black.opacity(0.34),
+                            .black.opacity(0.82),
+                            .black.opacity(0.52),
+                            .black.opacity(0.18),
                             .clear
                         ],
                         center: .center,
-                        startRadius: 80,
-                        endRadius: 480
+                        startRadius: 60,
+                        endRadius: 520
                     )
                 )
-                .frame(width: 980, height: 980)
-                .blur(radius: 38)
+                .frame(width: 920, height: 920)
+                .blur(radius: 24)
 
+            // Primary tint bloom — warm coloured halo behind the organ
             Circle()
-                .fill(tint.opacity(0.18))
-                .frame(width: 560, height: 560)
-                .blur(radius: 82)
-                .offset(x: -46, y: -22)
+                .fill(tint.opacity(0.28))
+                .frame(width: 520, height: 520)
+                .blur(radius: 90)
+                .offset(x: -16, y: -12)
 
+            // Secondary soft tint spread
             Circle()
-                .fill(Color.cyan.opacity(0.09))
-                .frame(width: 500, height: 500)
-                .blur(radius: 88)
-                .offset(x: 132, y: 48)
+                .fill(tint.opacity(0.12))
+                .frame(width: 680, height: 680)
+                .blur(radius: 120)
+                .offset(x: 24, y: 18)
+
+            // Subtle white specular highlight at top
+            Circle()
+                .fill(Color.white.opacity(0.06))
+                .frame(width: 280, height: 280)
+                .blur(radius: 60)
+                .offset(x: 0, y: -120)
+
+            // Thin outer halo ring — museum-like
+            Ellipse()
+                .stroke(tint.opacity(0.18), lineWidth: 1.2)
+                .frame(width: 580, height: 420)
+                .blur(radius: 3)
 
             Ellipse()
-                .stroke(.white.opacity(0.05), lineWidth: 1)
-                .frame(width: 720, height: 520)
-
-            Ellipse()
-                .stroke(.white.opacity(0.025), lineWidth: 1)
-                .frame(width: 880, height: 620)
-                .offset(y: 22)
-
-            ForEach(0..<24, id: \.self) { index in
-                Circle()
-                    .fill(index.isMultiple(of: 3) ? tint.opacity(0.28) : .white.opacity(0.10))
-                    .frame(width: index.isMultiple(of: 4) ? 4 : 2, height: index.isMultiple(of: 4) ? 4 : 2)
-                    .blur(radius: 0.8)
-                    .offset(
-                        x: CGFloat((index * 57) % 640) - 320,
-                        y: CGFloat((index * 43) % 420) - 210
-                    )
-            }
+                .stroke(.white.opacity(0.04), lineWidth: 1)
+                .frame(width: 700, height: 500)
+                .offset(y: 14)
         }
-        .opacity(isVisible ? 1 : 0.22)
+        .opacity(isVisible ? 1 : 0.18)
         .allowsHitTesting(false)
     }
 }
