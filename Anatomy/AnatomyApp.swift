@@ -23,6 +23,7 @@ struct AnatomyApp: App {
 
         ImmersiveSpace(id: AppModel.immersiveSpaceID) {
             ImmersiveView()
+
                 .environment(appModel)
                 .onAppear {
                     appModel.lastImmersiveOpenResult = .opened

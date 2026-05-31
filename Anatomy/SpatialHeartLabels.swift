@@ -45,7 +45,7 @@ enum SpatialLabelsConfig {
     static let labelOutwardOffset: Float = 0.42
 
     /// World-space display scale of the normalised heart (≈ how tall it floats).
-    static let worldScale: Float = 0.62
+    static let worldScale: Float = 0.13
 
     /// World position the heart floats at.
     static let worldPosition = SIMD3<Float>(0.0, 1.45, -1.6)
@@ -92,37 +92,45 @@ struct SpatialHeartLabelsView: View {
             content.add(root)
             holder.root = root
 
-            // Load + normalise the heart model.
+            // Load the heart and force it to an exact target size in metres.
+            // The model is first added to a parent that is already in the scene, then
+            // measured relative to that parent so the bounds are reliable; finally it is
+            // scaled so its largest dimension == targetSize.
+            let target = SpatialLabelsConfig.worldScale
             if let heart = try? await Entity(named: SpatialLabelsConfig.heartAssetName, in: realityKitContentBundle) {
-                let bounds = heart.visualBounds(relativeTo: nil)
-                let maxDim = max(bounds.extents.x, bounds.extents.y, bounds.extents.z)
-                let norm: Float = maxDim > 0 ? 1.0 / maxDim : 1.0
-                heart.scale = SIMD3<Float>(repeating: norm)
-                heart.position = -bounds.center * norm
+                let modelHost = Entity()
+                root.addChild(modelHost)
+                modelHost.addChild(heart)
 
-                let scaler = Entity()
-                scaler.scale = SIMD3<Float>(repeating: SpatialLabelsConfig.worldScale)
-                scaler.addChild(heart)
-                root.addChild(scaler)
+                let bounds = heart.visualBounds(relativeTo: modelHost)
+                let maxDim = max(bounds.extents.x, bounds.extents.y, bounds.extents.z)
+                let factor: Float = maxDim > 0.0001 ? (target / maxDim) : 0.01
+                heart.scale = SIMD3<Float>(repeating: factor)
+                heart.position = -bounds.center * factor
             }
 
             // Anchored labels + dots + connectors (all children of root → rotate with it).
+            // Anchor positions are scaled by `target` so they sit on the target-sized
+            // heart, while the label attachments stay unscaled so the text is readable.
+            let s = target
             for item in anchoredNotes {
+                let anchorPos = item.anchor * s
+
                 let dot = ModelEntity(
-                    mesh: .generateSphere(radius: 0.006),
+                    mesh: .generateSphere(radius: 0.005),
                     materials: [UnlitMaterial(color: .white)]
                 )
-                dot.position = item.anchor
+                dot.position = anchorPos
                 root.addChild(dot)
 
                 if let label = attachments.entity(for: "spatial-label-\(item.index)") {
                     label.components.set(BillboardComponent())
                     let outward = normalizedOutward(item.anchor)
-                    let labelPos = item.anchor + outward * SpatialLabelsConfig.labelOutwardOffset
+                    let labelPos = anchorPos + outward * (SpatialLabelsConfig.labelOutwardOffset * s)
                     label.position = labelPos
                     root.addChild(label)
 
-                    let line = Self.makeLine(from: item.anchor, to: labelPos, tint: organ.tint)
+                    let line = Self.makeLine(from: anchorPos, to: labelPos, tint: organ.tint)
                     root.addChild(line)
                 }
             }
