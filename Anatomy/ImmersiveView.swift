@@ -42,6 +42,7 @@ struct ImmersiveView: View {
     @State private var hasRunLaunchSequence = false
     @State private var isSwitchingOrgan = false
     @State private var viewerAngle: AnatomyOrgan.ViewerAngle = .front
+    @State private var audio = SpatialAudioController()
 
     private let carouselOrder = ["heart", "brain"]
     private let maxAnnotationSlots = 8
@@ -118,6 +119,10 @@ struct ImmersiveView: View {
                 heroEntity.scale = [1.55, 1.55, 1.55]
                 content.add(heroEntity)
             }
+
+            // Spatial audio emitter co-located with the organ.
+            audio.attach(to: content, at: heartPosition)
+            audio.play(organID: selectedOrgan.id)
 
             for index in 0..<maxAnnotationSlots {
                 guard let note = selectedOrgan.atlasNotes[safe: index] else { continue }
@@ -273,6 +278,11 @@ struct ImmersiveView: View {
             if newValue != "heart" {
                 viewerAngle = .front
             }
+            audio.move(to: heartPosition)
+            audio.play(organID: newValue)
+        }
+        .onDisappear {
+            audio.stop()
         }
         .onChange(of: appModel.selectedStudyMode) { _, newValue in
             withAnimation(.spring(response: 0.48, dampingFraction: 0.84)) {
@@ -922,7 +932,7 @@ private struct SpatialConnectorAttachment: View {
             path.addLine(to: elbow)
             path.addLine(to: end)
 
-            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.24 : 0.68
+            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.30 : 0.92
             let lineColor: Color = isSelected ? tint : .white
             let colors: [Color] = [
                 lineColor.opacity(baseOpacity),
@@ -937,7 +947,7 @@ private struct SpatialConnectorAttachment: View {
                     startPoint: CGPoint(x: 0, y: size.height * 0.5),
                     endPoint: CGPoint(x: size.width, y: size.height * 0.5)
                 ),
-                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.4, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.9, lineCap: .round, lineJoin: .round)
             )
         }
         .frame(width: width, height: height)
@@ -1211,59 +1221,65 @@ private struct ImmersiveInfoPanel: View {
                     )
                 }
 
-                if studyMode != .quiz {
-                    VStack(spacing: 12) {
-                        // Primary: Start Quiz (filled, tinted)
-                        Button(action: onStartQuiz) {
-                            HStack(spacing: 10) {
-                                Spacer()
-                                Image(systemName: "questionmark.circle.fill")
-                                    .font(.headline.weight(.bold))
-                                Text("Start Quiz")
-                                    .font(.headline.weight(.bold))
-                                Spacer()
-                            }
-                            .foregroundStyle(.white)
-                            .padding(.vertical, 15)
-                            .background(
-                                LinearGradient(
-                                    colors: [organ.tint.opacity(0.92), organ.tint.opacity(0.74)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                in: Capsule()
-                            )
-                            .shadow(color: organ.tint.opacity(0.34), radius: 14, y: 6)
-                        }
-                        .buttonStyle(.plain)
-
-                        // Secondary: Learn More (outline)
-                        Button(action: {
-                            isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
-                        }) {
-                            HStack(spacing: 10) {
-                                Spacer()
-                                Image(systemName: isLearnMorePresented ? "xmark.circle" : "book")
-                                    .font(.subheadline.weight(.semibold))
-                                Text(isLearnMorePresented ? "Close" : "Learn More")
-                                    .font(.headline.weight(.semibold))
-                                Spacer()
-                            }
-                            .foregroundStyle(.white.opacity(0.92))
-                            .padding(.vertical, 14)
-                            .background(.white.opacity(0.06), in: Capsule())
-                            .overlay {
-                                Capsule()
-                                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
             }
             .padding(26)
         }
         .scrollIndicators(.hidden)
+        // Pinned footer — Start Quiz / Learn More are always visible regardless of
+        // how tall the scrolling content is (fixes the clipped button on Brain).
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if studyMode != .quiz {
+                VStack(spacing: 12) {
+                    Button(action: onStartQuiz) {
+                        HStack(spacing: 10) {
+                            Spacer()
+                            Image(systemName: "questionmark.circle.fill")
+                                .font(.headline.weight(.bold))
+                            Text("Start Quiz")
+                                .font(.headline.weight(.bold))
+                            Spacer()
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.vertical, 15)
+                        .background(
+                            LinearGradient(
+                                colors: [organ.tint.opacity(0.92), organ.tint.opacity(0.74)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            in: Capsule()
+                        )
+                        .shadow(color: organ.tint.opacity(0.34), radius: 14, y: 6)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: {
+                        isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
+                    }) {
+                        HStack(spacing: 10) {
+                            Spacer()
+                            Image(systemName: isLearnMorePresented ? "xmark.circle" : "book")
+                                .font(.subheadline.weight(.semibold))
+                            Text(isLearnMorePresented ? "Close" : "Learn More")
+                                .font(.headline.weight(.semibold))
+                            Spacer()
+                        }
+                        .foregroundStyle(.white.opacity(0.92))
+                        .padding(.vertical, 14)
+                        .background(.white.opacity(0.06), in: Capsule())
+                        .overlay {
+                            Capsule()
+                                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 26)
+                .padding(.top, 14)
+                .padding(.bottom, 24)
+                .background(.black.opacity(0.55))
+            }
+        }
         .background(
             LinearGradient(
                 colors: [

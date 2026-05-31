@@ -54,6 +54,9 @@ struct OrganRealityView: View {
                 // callout lines stay aligned with the anatomy.
                 let motionRate = organ.pulseStyle == .heartbeat ? 0.55 : 0.40
                 let sway = showAnnotations ? 0 : sin(time * motionRate) * (organ.pulseStyle == .heartbeat ? 8 : 5)
+                // Slow continuous turntable spin in Explore mode (paused while labels are
+                // shown or a structure is focused, so callouts stay aligned).
+                let autoSpin: Double = (showAnnotations || selectedAnnotation != nil) ? 0 : time * 12.0
                 let lift = sin(time * (organ.pulseStyle == .heartbeat ? 0.95 : 0.70)) * (showAnnotations ? 3 : (organ.pulseStyle == .heartbeat ? 10 : 7))
                 let organPulse: CGFloat = {
                     if showAnnotations { return 1.0 }
@@ -149,7 +152,7 @@ struct OrganRealityView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .scaleEffect((organ.heroScale * bundledModelScaleMultiplier) * focusScale * organPulse * (isHeroVisible ? 1 : 0.82))
                                     .rotation3DEffect(.degrees(focusPitch), axis: (x: 1, y: 0, z: 0))
-                                    .rotation3DEffect(.degrees(sway + focusYaw), axis: (x: 0, y: 1, z: 0))
+                                    .rotation3DEffect(.degrees(sway + focusYaw + autoSpin), axis: (x: 0, y: 1, z: 0))
                                     .offset(
                                         x: organ.heroOffset.width + focusOffset.width,
                                         y: organ.heroOffset.height + focusOffset.height + lift + (isHeroVisible ? 0 : 20)
