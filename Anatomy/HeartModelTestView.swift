@@ -2,7 +2,7 @@
 //  HeartModelTestView.swift
 //  Anatomy
 //
-//  Created by Codex on 24/05/26.
+//  Created by Bobur Toshpulatov on 24/05/26.
 //
 
 import SwiftUI

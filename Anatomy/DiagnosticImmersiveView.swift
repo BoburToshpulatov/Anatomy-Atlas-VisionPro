@@ -2,7 +2,7 @@
 //  DiagnosticImmersiveView.swift
 //  Anatomy
 //
-//  Created by Codex on 25/05/26.
+//  Created by Bobur Toshpulatov on 25/05/26.
 //
 
 import SwiftUI

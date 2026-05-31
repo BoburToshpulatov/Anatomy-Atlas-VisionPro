@@ -1123,7 +1123,6 @@ private struct ImmersiveNavButton: View {
         .buttonStyle(.plain)
         .disabled(!isEnabled)
         .opacity(isEnabled ? 1 : 0.3)
-        .offset(z: 24)
     }
 }
 
