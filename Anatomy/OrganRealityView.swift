@@ -50,10 +50,13 @@ struct OrganRealityView: View {
         GeometryReader { geometry in
             TimelineView(.animation) { timeline in
                 let time = timeline.date.timeIntervalSinceReferenceDate
+                // In Labels mode the model holds still (only a gentle float) so the
+                // callout lines stay aligned with the anatomy.
                 let motionRate = organ.pulseStyle == .heartbeat ? 0.55 : 0.40
-                let sway = sin(time * motionRate) * (organ.pulseStyle == .heartbeat ? 8 : 5)
-                let lift = sin(time * (organ.pulseStyle == .heartbeat ? 0.95 : 0.70)) * (organ.pulseStyle == .heartbeat ? 10 : 7)
+                let sway = showAnnotations ? 0 : sin(time * motionRate) * (organ.pulseStyle == .heartbeat ? 8 : 5)
+                let lift = sin(time * (organ.pulseStyle == .heartbeat ? 0.95 : 0.70)) * (showAnnotations ? 3 : (organ.pulseStyle == .heartbeat ? 10 : 7))
                 let organPulse: CGFloat = {
+                    if showAnnotations { return 1.0 }
                     switch organ.pulseStyle {
                     case .heartbeat:
                         return sin(time * 2.2) * 0.018 + 1.0

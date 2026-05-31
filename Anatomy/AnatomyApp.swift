@@ -18,7 +18,7 @@ struct AnatomyApp: App {
                 .environment(appModel)
         }
         .windowStyle(.plain)
-        .defaultSize(width: 980, height: 700)
+        .defaultSize(width: 1300, height: 920)
         .windowResizability(.contentSize)
 
         ImmersiveSpace(id: AppModel.immersiveSpaceID) {

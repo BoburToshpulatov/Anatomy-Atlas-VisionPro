@@ -10,14 +10,14 @@ import RealityKit
 import RealityKitContent
 
 private enum ImmersiveLayoutConfig {
-    static let topBarPosition = SIMD3<Float>(0.0, 1.82, -1.30)
+    static let topBarPosition = SIMD3<Float>(0.0, 1.98, -1.30)
     static let topBarWidth: CGFloat = 380
     static let auraSize: CGFloat = 1180
     static let heroFrame = CGSize(width: 1440, height: 1100)
     static let panelHeight: CGFloat = 1040
     static let instructionOpacityWhenHidden = 0.001
-    static let carouselStackWidth: CGFloat = 760
-    static let carouselFrameHeight: CGFloat = 250
+    static let carouselStackWidth: CGFloat = 880
+    static let carouselFrameHeight: CGFloat = 210
     static let bottomStackSpacing: CGFloat = 12
     static let labelVerticalSpread: Float = 0.58
     static let labelSelectedLift: Float = 0.04
@@ -981,12 +981,11 @@ private struct ImmersiveCarousel: View {
     let onNavigateRight: () -> Void
 
     var body: some View {
-        VStack(spacing: 14) {
-            // Unified selector tray — arrows integrated with the cards
-            HStack(spacing: 18) {
+        VStack(spacing: 12) {
+            HStack(spacing: 20) {
                 ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
 
-                HStack(spacing: 16) {
+                HStack(spacing: 18) {
                     ForEach(organs) { organ in
                         ImmersiveCarouselCard(
                             organ: organ,
@@ -997,30 +996,19 @@ private struct ImmersiveCarousel: View {
                         }
                     }
                 }
-                .padding(.horizontal, 6)
 
                 ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 14)
-            .background(.black.opacity(0.34), in: RoundedRectangle(cornerRadius: 34, style: .continuous))
-            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 34, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 34, style: .continuous)
-                    .strokeBorder(.white.opacity(0.08), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.24), radius: 20, y: 10)
 
             // Page indicator dots
             HStack(spacing: 8) {
                 ForEach(organs) { organ in
-                    Capsule()
-                        .fill(.white.opacity(organ.id == selectedOrganID ? 0.92 : 0.30))
+                    Circle()
+                        .fill(.white.opacity(organ.id == selectedOrganID ? 0.92 : 0.32))
                         .frame(
-                            width: organ.id == selectedOrganID ? 20 : 7,
-                            height: 7
+                            width: organ.id == selectedOrganID ? 8 : 6,
+                            height: organ.id == selectedOrganID ? 8 : 6
                         )
-                        .animation(.spring(response: 0.4, dampingFraction: 0.84), value: selectedOrganID)
                 }
             }
         }
@@ -1036,7 +1024,7 @@ private struct ImmersiveCarouselCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
                 switch phase {
                 case .empty:
@@ -1045,47 +1033,49 @@ private struct ImmersiveCarouselCard: View {
                     model
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .scaleEffect(isSelected ? 1.08 : 0.88)
-                        .padding(14)
+                        .scaleEffect(isSelected ? 1.05 : 0.86)
+                        .padding(12)
                 case .failure:
                     Image(systemName: organ.symbolName)
-                        .font(.system(size: isSelected ? 38 : 30, weight: .bold))
+                        .font(.system(size: isSelected ? 32 : 26, weight: .bold))
                         .foregroundStyle(.white.opacity(0.8))
                 @unknown default:
                     EmptyView()
                 }
             }
-            .frame(width: 158, height: 122)
+            .frame(width: 132, height: 100)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: isSelected
-                                ? [organ.tint.opacity(0.46), organ.tint.opacity(0.18), .black.opacity(0.42)]
-                                : [.white.opacity(0.10), .black.opacity(0.48)],
+                            colors: [
+                                organ.tint.opacity(isSelected ? 0.40 : 0.08),
+                                .white.opacity(isSelected ? 0.08 : 0.02),
+                                .black.opacity(0.30)
+                            ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.12), lineWidth: isSelected ? 2.5 : 1)
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(isSelected ? organ.tint.opacity(0.88) : .white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
             }
-            .shadow(color: isSelected ? organ.tint.opacity(0.44) : .black.opacity(0.18), radius: isSelected ? 24 : 8, y: isSelected ? 10 : 4)
+            .shadow(color: isSelected ? organ.tint.opacity(0.36) : .black.opacity(0.14), radius: isSelected ? 20 : 8, y: isSelected ? 9 : 4)
 
             VStack(spacing: 3) {
                 Text(organ.title)
                     .font(.headline.weight(.bold))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.99 : 0.80))
+                    .foregroundStyle(.white.opacity(isSelected ? 0.99 : 0.82))
 
                 Text(organ.tagline)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(isSelected ? organ.tint.opacity(0.92) : .white.opacity(0.52))
+                    .foregroundStyle(isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.52))
             }
         }
-        .frame(width: 184)
-        .scaleEffect(isSelected ? 1.07 : 0.96)
+        .frame(width: 172)
+        .scaleEffect(isSelected ? 1.08 : 1.0)
         .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
     }
 }
@@ -1164,8 +1154,8 @@ private struct ImmersiveInfoPanel: View {
                     }
 
                     Text(organ.description)
-                        .font(.title3.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.84))
+                        .font(.title2.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.86))
                         .lineLimit(4)
                 }
 
@@ -1749,18 +1739,18 @@ private struct ImmersiveAnnotationRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(note.title)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.98 : 0.90))
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white.opacity(isSelected ? 0.98 : 0.92))
 
                 Text(note.subtitle)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.66))
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.68))
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.subheadline.weight(.bold))
+                .font(.body.weight(.bold))
                 .foregroundStyle(isSelected ? tint.opacity(0.9) : .white.opacity(0.42))
         }
         .padding(.horizontal, 16)
