@@ -176,7 +176,7 @@ extension AnatomyOrgan {
             modelName: "Human_Heart.usdz",
             tint: Color(red: 0.93, green: 0.28, blue: 0.35),
             heroScale: 0.92,
-            heroOffset: CGSize(width: 10, height: 96),
+            heroOffset: CGSize(width: 10, height: 210),
             baseYaw: -6,
             basePitch: -12,
             glowScale: 1.0,

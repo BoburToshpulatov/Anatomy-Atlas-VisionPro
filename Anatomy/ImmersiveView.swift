@@ -62,28 +62,8 @@ struct ImmersiveView: View {
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
     private var visibleAnnotationIDs: Set<String> {
         guard appModel.selectedStudyMode == .labels else { return [] }
-        if appModel.selectedAnnotationID != nil {
-            return Set(selectedOrgan.atlasNotes.map(\.id))
-        }
-
-        switch selectedOrgan.id {
-        case "heart":
-            return [
-                "heart-aorta",
-                "heart-pulmonary-artery",
-                "heart-right-atrium",
-                "heart-left-ventricle"
-            ]
-        case "brain":
-            return [
-                "brain-frontal",
-                "brain-parietal",
-                "brain-temporal",
-                "brain-cerebellum"
-            ]
-        default:
-            return Set(selectedOrgan.atlasNotes.map(\.id))
-        }
+        // Labels mode shows every structure for the organ.
+        return Set(selectedOrgan.atlasNotes.map(\.id))
     }
     private var glowPosition: SIMD3<Float> {
         SIMD3<Float>(
