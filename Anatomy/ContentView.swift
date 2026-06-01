@@ -224,21 +224,7 @@ private struct LauncherShell<Content: View>: View {
         content
             .padding(.horizontal, 44)
             .padding(.vertical, 38)
-            // Richer dark tint behind the glass so the panel reads as deep dark glass
-            // (not muddy grey), then the system glass material on the same rounded shape.
-            .background(
-                LinearGradient(
-                    colors: [
-                        .black.opacity(0.58),
-                        .black.opacity(0.46)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous))
-            .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: LauncherLayout.shellCornerRadius, style: .continuous))
-            .shadow(color: .black.opacity(0.36), radius: 36, y: 20)
+            .premiumSurface(radius: LauncherLayout.shellCornerRadius)
     }
 }
 
@@ -263,21 +249,9 @@ private struct LauncherOrganCard: View {
             }
         }
         .padding(24)
-        // Identical fixed size AND identical fill for both cards — only the border
-        // changes on selection, so the two boxes always look the same.
+        // Identical fixed size; selection shown only by the shared surface's border.
         .frame(width: 320, height: 312)
-        .background(
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(.white.opacity(0.05))
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .strokeBorder(
-                    isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.14),
-                    lineWidth: isSelected ? 3 : 1
-                )
-                .allowsHitTesting(false)
-        }
+        .premiumSurface(radius: DS.Radius.card, selected: isSelected, tint: organ.tint)
         .animation(.spring(response: 0.4, dampingFraction: 0.84), value: isSelected)
     }
 

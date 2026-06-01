@@ -721,6 +721,17 @@ private struct ImmersiveHeroStage: View {
     let isGlowVisible: Bool
     let onAnnotationSelected: (String) -> Void
 
+    /// THE one staging knob per organ: where the pedestal sits relative to the model,
+    /// as a fraction of the stage height (larger = lower). Tune one value per model
+    /// so the organ rests just above its rings.
+    private var pedestalFraction: CGFloat {
+        switch organ.id {
+        case "heart": return 0.14
+        case "brain": return 0.28
+        default:      return 0.28
+        }
+    }
+
     var body: some View {
         let preset = organ.immersivePreset
 
@@ -807,7 +818,7 @@ private struct ImmersiveHeroStage: View {
                     .frame(width: preset.floorGlowWidth * 0.42, height: preset.floorGlowHeight * 0.30)
                     .blur(radius: 10)
             }
-            .offset(y: preset.stageHeight * 0.28)
+            .offset(y: preset.stageHeight * pedestalFraction)
             .offset(z: -44)
             .opacity(isGlowVisible ? 1 : 0)
 
@@ -1005,7 +1016,6 @@ private struct ImmersiveCarousel: View {
         .opacity(isVisible ? 1 : 0)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 2)
-        .offset(z: 10)
     }
 }
 
@@ -1034,25 +1044,17 @@ private struct ImmersiveCarouselCard: View {
                 }
             }
             .frame(width: 132, height: 100)
+            // Flat tile — opaque dark fill so the room never shows through, single
+            // border for selection, NO shadow (shadows read as misaligned layers
+            // from a top viewing angle).
             .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                organ.tint.opacity(isSelected ? 0.40 : 0.08),
-                                .white.opacity(isSelected ? 0.08 : 0.02),
-                                .black.opacity(0.30)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                    .fill(isSelected ? organ.tint.opacity(0.22) : Color.black.opacity(0.55))
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .strokeBorder(isSelected ? organ.tint.opacity(0.88) : .white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                    .strokeBorder(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.12), lineWidth: isSelected ? 2.5 : 1)
             }
-            .shadow(color: isSelected ? organ.tint.opacity(0.36) : .black.opacity(0.14), radius: isSelected ? 20 : 8, y: isSelected ? 9 : 4)
 
             VStack(spacing: 3) {
                 Text(organ.title)
@@ -1065,7 +1067,7 @@ private struct ImmersiveCarouselCard: View {
             }
         }
         .frame(width: 172)
-        .scaleEffect(isSelected ? 1.08 : 1.0)
+        .scaleEffect(isSelected ? 1.04 : 1.0)
         .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
     }
 }
