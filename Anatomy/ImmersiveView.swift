@@ -214,6 +214,8 @@ struct ImmersiveView: View {
                     progressText: appModel.selectedOrganProgressText,
                     isLearnMorePresented: appModel.isLearnMorePresented,
                     currentQuizQuestion: appModel.currentQuizQuestion,
+                    quizIndex: appModel.activeQuizQuestionIndex,
+                    quizCount: selectedOrgan.quizQuestions.count,
                     selectedQuizAnswerIndex: appModel.selectedQuizAnswerIndex,
                     hasSubmittedCurrentQuizAnswer: appModel.hasSubmittedCurrentQuizAnswer,
                     onAnnotationSelected: selectAnnotation,
@@ -1128,6 +1130,8 @@ private struct ImmersiveInfoPanel: View {
     let progressText: String
     let isLearnMorePresented: Bool
     let currentQuizQuestion: OrganQuizQuestion?
+    let quizIndex: Int
+    let quizCount: Int
     let selectedQuizAnswerIndex: Int?
     let hasSubmittedCurrentQuizAnswer: Bool
     let onAnnotationSelected: (String) -> Void
@@ -1202,6 +1206,8 @@ private struct ImmersiveInfoPanel: View {
                     QuizSection(
                         organ: organ,
                         question: currentQuizQuestion,
+                        questionNumber: quizIndex + 1,
+                        questionCount: quizCount,
                         selectedAnswerIndex: selectedQuizAnswerIndex,
                         hasSubmitted: hasSubmittedCurrentQuizAnswer,
                         onSubmitAnswer: onSubmitQuizAnswer,
@@ -1696,72 +1702,98 @@ private struct StructureListSection: View {
 private struct QuizSection: View {
     let organ: AnatomyOrgan
     let question: OrganQuizQuestion?
+    let questionNumber: Int
+    let questionCount: Int
     let selectedAnswerIndex: Int?
     let hasSubmitted: Bool
     let onSubmitAnswer: (Int) -> Void
     let onAdvance: () -> Void
 
+    private var isCorrect: Bool {
+        guard let question, let selectedAnswerIndex else { return false }
+        return selectedAnswerIndex == question.correctAnswerIndex
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Quiz")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.white.opacity(0.88))
+        if let question {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header row: progress + question kind
+                HStack {
+                    Text("Question \(questionNumber) of \(questionCount)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.6))
+                    Spacer()
+                    Label(question.kind.label, systemImage: question.kind.symbol)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(organ.tint)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(organ.tint.opacity(0.16), in: Capsule())
+                }
 
-            if let question {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(question.title)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(organ.tint.opacity(0.94))
-                        .textCase(.uppercase)
-                        .tracking(0.6)
+                // Category badge
+                Text(question.category.uppercased())
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .tracking(0.8)
 
-                    Text(question.prompt)
-                        .font(.title3.weight(.bold))
-                        .foregroundStyle(.white)
+                // Optional illustration
+                if let slot = question.imageSlot {
+                    AnatomyImage(slot: slot, tint: organ.tint)
+                        .frame(height: 150)
+                }
 
-                    Text("Select the structure that best matches the prompt.")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.68))
+                // Prompt
+                Text(question.prompt)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                    VStack(spacing: 12) {
-                        ForEach(Array(question.answers.enumerated()), id: \.offset) { index, answer in
-                            QuizAnswerButton(
-                                answer: answer,
-                                isSelected: selectedAnswerIndex == index,
-                                isCorrect: hasSubmitted && index == question.correctAnswerIndex,
-                                isIncorrect: hasSubmitted && selectedAnswerIndex == index && index != question.correctAnswerIndex,
-                                tint: organ.tint
-                            ) {
-                                onSubmitAnswer(index)
-                            }
-                        }
-                    }
-
-                    if hasSubmitted {
-                        QuizFeedbackBanner(
-                            isCorrect: selectedAnswerIndex == question.correctAnswerIndex,
-                            hint: question.hint,
-                            explanation: question.explanation,
+                // Answers
+                VStack(spacing: 10) {
+                    ForEach(Array(question.answers.enumerated()), id: \.offset) { index, answer in
+                        QuizAnswerButton(
+                            answer: answer,
+                            letter: String(UnicodeScalar(65 + index)!),
+                            isSelected: selectedAnswerIndex == index,
+                            isCorrect: hasSubmitted && index == question.correctAnswerIndex,
+                            isIncorrect: hasSubmitted && selectedAnswerIndex == index && index != question.correctAnswerIndex,
+                            locked: hasSubmitted,
                             tint: organ.tint
-                        )
-
-                        Button(action: onAdvance) {
-                            Label("Next Question", systemImage: "arrow.right.circle")
-                                .font(.headline.weight(.semibold))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
+                        ) {
+                            if !hasSubmitted { onSubmitAnswer(index) }
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(organ.tint)
                     }
                 }
-                .padding(20)
-                .premiumImmersiveCard(cornerRadius: 24, fillOpacity: 0.14, borderOpacity: 0.08)
-            } else {
-                Text(organ.hasBundledModel ? "Choose Heart or Brain to begin the structure quiz." : "Quiz content for this organ is coming soon.")
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.74))
+
+                if hasSubmitted {
+                    QuizFeedbackBanner(
+                        isCorrect: isCorrect,
+                        hint: question.hint,
+                        explanation: question.explanation,
+                        tint: organ.tint
+                    )
+
+                    Button(action: onAdvance) {
+                        Label(questionNumber >= questionCount ? "Restart Quiz" : "Next Question",
+                              systemImage: "arrow.right.circle.fill")
+                            .font(.headline.weight(.bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(
+                                LinearGradient(colors: [organ.tint.opacity(0.92), organ.tint.opacity(0.74)],
+                                               startPoint: .topLeading, endPoint: .bottomTrailing),
+                                in: Capsule()
+                            )
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
+        } else {
+            Text(organ.hasBundledModel ? "Choose Heart or Brain to begin the quiz." : "Quiz content for this organ is coming soon.")
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white.opacity(0.74))
         }
     }
 }
@@ -1799,55 +1831,66 @@ private struct QuizFeedbackBanner: View {
 
 private struct QuizAnswerButton: View {
     let answer: String
+    let letter: String
     let isSelected: Bool
     let isCorrect: Bool
     let isIncorrect: Bool
+    let locked: Bool
     let tint: Color
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 12) {
-                Circle()
-                    .fill(markerColor)
-                    .frame(width: 12, height: 12)
+                ZStack {
+                    Circle().fill(markerFill).frame(width: 26, height: 26)
+                    if isCorrect {
+                        Image(systemName: "checkmark").font(.caption.weight(.bold)).foregroundStyle(.white)
+                    } else if isIncorrect {
+                        Image(systemName: "xmark").font(.caption.weight(.bold)).foregroundStyle(.white)
+                    } else {
+                        Text(letter).font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.9))
+                    }
+                }
 
                 Text(answer)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.94))
+                    .fixedSize(horizontal: false, vertical: true)
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 11)
-            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .padding(.vertical, 13)
+            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(borderColor, lineWidth: isSelected || isCorrect || isIncorrect ? 1.6 : 1)
             }
         }
         .buttonStyle(.plain)
+        .disabled(locked)
     }
 
-    private var markerColor: Color {
+    private var markerFill: Color {
         if isCorrect { return .green.opacity(0.9) }
         if isIncorrect { return .red.opacity(0.9) }
         if isSelected { return tint }
-        return .white.opacity(0.42)
+        return .white.opacity(0.16)
     }
 
     private var backgroundColor: Color {
-        if isCorrect { return .green.opacity(0.12) }
-        if isIncorrect { return .red.opacity(0.12) }
-        if isSelected { return tint.opacity(0.16) }
-        return .white.opacity(0.03)
+        if isCorrect { return .green.opacity(0.16) }
+        if isIncorrect { return .red.opacity(0.16) }
+        if isSelected { return tint.opacity(0.18) }
+        return .white.opacity(0.04)
     }
 
     private var borderColor: Color {
-        if isCorrect { return .green.opacity(0.52) }
-        if isIncorrect { return .red.opacity(0.52) }
-        if isSelected { return tint.opacity(0.48) }
-        return .white.opacity(0.08)
+        if isCorrect { return .green.opacity(0.6) }
+        if isIncorrect { return .red.opacity(0.6) }
+        if isSelected { return tint.opacity(0.5) }
+        return .white.opacity(0.10)
     }
 }
 

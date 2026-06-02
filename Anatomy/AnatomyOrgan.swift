@@ -114,6 +114,30 @@ struct OrganAnnotation: Identifiable, Hashable {
 }
 
 struct OrganQuizQuestion: Identifiable, Hashable {
+    enum Kind: Hashable {
+        case multipleChoice
+        case identifyStructure
+        case matchFunction
+        case scenario
+
+        var label: String {
+            switch self {
+            case .multipleChoice: "Multiple Choice"
+            case .identifyStructure: "Identify Structure"
+            case .matchFunction: "Match Function"
+            case .scenario: "Scenario"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .multipleChoice: "list.bullet"
+            case .identifyStructure: "scope"
+            case .matchFunction: "arrow.left.arrow.right"
+            case .scenario: "person.fill.questionmark"
+            }
+        }
+    }
+
     let id: String
     let title: String
     let prompt: String
@@ -121,6 +145,26 @@ struct OrganQuizQuestion: Identifiable, Hashable {
     let correctAnswerIndex: Int
     let hint: String
     let explanation: String
+    let kind: Kind
+    /// Which learning section this reinforces (Overview / Anatomy / Functionality / Real-World / Summary).
+    let category: String
+    /// Optional illustration shown with the question.
+    let imageSlot: AssetSlot?
+
+    init(id: String, title: String, prompt: String, answers: [String], correctAnswerIndex: Int,
+         hint: String, explanation: String,
+         kind: Kind = .multipleChoice, category: String = "Anatomy", imageSlot: AssetSlot? = nil) {
+        self.id = id
+        self.title = title
+        self.prompt = prompt
+        self.answers = answers
+        self.correctAnswerIndex = correctAnswerIndex
+        self.hint = hint
+        self.explanation = explanation
+        self.kind = kind
+        self.category = category
+        self.imageSlot = imageSlot
+    }
 }
 
 extension AnatomyOrgan {
@@ -782,11 +826,14 @@ extension AnatomyOrgan {
                 OrganQuizQuestion(
                     id: "heart-quiz-aorta",
                     title: "Systemic outflow",
-                    prompt: "Which heart structure carries oxygen-rich blood from the left ventricle into the systemic circuit?",
+                    prompt: "Which structure carries oxygen-rich blood from the left ventricle into the body?",
                     answers: ["Pulmonary artery", "Aorta", "Superior vena cava"],
                     correctAnswerIndex: 1,
-                    hint: "Look for the large artery leaving the left ventricle at the top of the heart.",
-                    explanation: "The aorta is the main systemic outflow vessel. It receives blood from the left ventricle and distributes it to the body."
+                    hint: "The largest artery, leaving the top of the heart.",
+                    explanation: "The aorta is the main systemic outflow vessel, distributing oxygenated blood to the body.",
+                    kind: .identifyStructure,
+                    category: "Anatomy",
+                    imageSlot: AssetSlot("heart_vessels", caption: "Great vessels", symbol: "scope")
                 ),
                 OrganQuizQuestion(
                     id: "heart-quiz-right-atrium",
@@ -794,17 +841,54 @@ extension AnatomyOrgan {
                     prompt: "Which chamber receives deoxygenated blood returning from the body?",
                     answers: ["Left atrium", "Right ventricle", "Right atrium"],
                     correctAnswerIndex: 2,
-                    hint: "Trace systemic venous blood as it enters the heart before crossing the tricuspid valve.",
-                    explanation: "The right atrium collects systemic venous blood before it passes through the tricuspid valve."
+                    hint: "Where systemic venous blood enters before the tricuspid valve.",
+                    explanation: "The right atrium collects systemic venous blood before it passes through the tricuspid valve.",
+                    kind: .multipleChoice,
+                    category: "Anatomy"
                 ),
                 OrganQuizQuestion(
                     id: "heart-quiz-left-ventricle",
                     title: "Pressure chamber",
-                    prompt: "Which heart chamber generates the highest pressure for systemic circulation?",
-                    answers: ["Left ventricle", "Right ventricle", "Left atrium"],
+                    prompt: "Which chamber pumps oxygenated blood to the rest of the body?",
+                    answers: ["Right atrium", "Right ventricle", "Left ventricle"],
+                    correctAnswerIndex: 2,
+                    hint: "The chamber with the thickest muscular wall.",
+                    explanation: "The left ventricle has the thickest myocardium and drives blood through the systemic circuit.",
+                    kind: .multipleChoice,
+                    category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "heart-quiz-valves",
+                    title: "One-way flow",
+                    prompt: "Match the function to its structure: \"Prevents blood flowing backward between chambers.\"",
+                    answers: ["Valves", "Aorta", "Septum"],
                     correctAnswerIndex: 0,
-                    hint: "Choose the chamber with the thickest muscular wall that sends blood to the whole body.",
-                    explanation: "The left ventricle has the thickest myocardium and provides the pressure needed to drive blood through the body."
+                    hint: "Four of these open and close with each beat.",
+                    explanation: "The four heart valves enforce one-way blood flow, snapping shut to prevent backflow.",
+                    kind: .matchFunction,
+                    category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "heart-quiz-pacemaker",
+                    title: "Natural pacemaker",
+                    prompt: "Match the function to its structure: \"Sets the heart's rhythm by firing the first electrical signal.\"",
+                    answers: ["SA node", "Mitral valve", "Aorta"],
+                    correctAnswerIndex: 0,
+                    hint: "It sits in the right atrium and starts each beat.",
+                    explanation: "The SA (sinoatrial) node is the heart's natural pacemaker, initiating each heartbeat.",
+                    kind: .matchFunction,
+                    category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "heart-quiz-exercise",
+                    title: "Heart under load",
+                    prompt: "During exercise, what mainly rises to deliver more oxygen to working muscles?",
+                    answers: ["Heart rate and output", "Number of valves", "Heart size"],
+                    correctAnswerIndex: 0,
+                    hint: "Think about what changes within seconds of effort.",
+                    explanation: "Heart rate and stroke volume increase during exercise, raising output to meet oxygen demand.",
+                    kind: .scenario,
+                    category: "Real-World"
                 )
             ]
         case "brain":
@@ -812,29 +896,69 @@ extension AnatomyOrgan {
                 OrganQuizQuestion(
                     id: "brain-quiz-frontal",
                     title: "Executive control",
-                    prompt: "Which brain region is most associated with planning, decision making, and voluntary movement control?",
+                    prompt: "Which lobe is most associated with planning, decision making, and voluntary movement?",
                     answers: ["Temporal lobe", "Frontal lobe", "Cerebellum"],
                     correctAnswerIndex: 1,
-                    hint: "Focus on the forward portion of the cerebral hemisphere behind the forehead.",
-                    explanation: "The frontal lobe supports executive function, motor planning, and decision making."
+                    hint: "The forward part of the cerebrum, behind the forehead.",
+                    explanation: "The frontal lobe supports executive function, motor planning, and decision making.",
+                    kind: .identifyStructure,
+                    category: "Anatomy",
+                    imageSlot: AssetSlot("brain_lobes", caption: "Cerebral lobes", symbol: "scope")
                 ),
                 OrganQuizQuestion(
                     id: "brain-quiz-cerebellum",
                     title: "Precision and balance",
-                    prompt: "Which structure helps refine movement timing and balance?",
+                    prompt: "Which structure refines movement timing and balance?",
                     answers: ["Brainstem", "Parietal lobe", "Cerebellum"],
                     correctAnswerIndex: 2,
-                    hint: "Look below the posterior cerebrum for the tightly folded structure that fine-tunes movement.",
-                    explanation: "The cerebellum coordinates fine movement, balance, and motor learning."
+                    hint: "The tightly folded structure below the back of the cerebrum.",
+                    explanation: "The cerebellum coordinates fine movement, balance, and motor learning.",
+                    kind: .multipleChoice,
+                    category: "Anatomy"
                 ),
                 OrganQuizQuestion(
                     id: "brain-quiz-brainstem",
                     title: "Autonomic relay",
-                    prompt: "Which region links the brain and spinal cord while regulating breathing and arousal?",
+                    prompt: "Which region links brain and spinal cord while regulating breathing?",
                     answers: ["Brainstem", "Frontal lobe", "Parietal lobe"],
                     correctAnswerIndex: 0,
-                    hint: "Find the narrow stalk-like region at the base of the brain.",
-                    explanation: "The brainstem is the core relay for autonomic regulation and the pathway between brain and spinal cord."
+                    hint: "The narrow stalk at the base of the brain.",
+                    explanation: "The brainstem relays signals and controls automatic functions like breathing and heart rate.",
+                    kind: .multipleChoice,
+                    category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "brain-quiz-memory",
+                    title: "Where memories form",
+                    prompt: "Match the function to its region: \"Encodes and helps retrieve new memories.\"",
+                    answers: ["Cerebellum", "Temporal lobe / hippocampus", "Brainstem"],
+                    correctAnswerIndex: 1,
+                    hint: "Deep within the temporal lobe.",
+                    explanation: "The hippocampus, within the temporal lobe, is central to forming and retrieving memories.",
+                    kind: .matchFunction,
+                    category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "brain-quiz-vision",
+                    title: "Seeing the world",
+                    prompt: "Match the function to its lobe: \"Processes visual information.\"",
+                    answers: ["Occipital lobe", "Frontal lobe", "Cerebellum"],
+                    correctAnswerIndex: 0,
+                    hint: "The lobe at the very back of the brain.",
+                    explanation: "The occipital lobe is the brain's primary visual processing centre.",
+                    kind: .matchFunction,
+                    category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "brain-quiz-sleep",
+                    title: "Why we sleep",
+                    prompt: "What important job does the brain do during sleep?",
+                    answers: ["Consolidates memory and clears waste", "Stops all activity", "Grows new lobes"],
+                    correctAnswerIndex: 0,
+                    hint: "Sleep is when learning gets 'saved'.",
+                    explanation: "During sleep the brain consolidates memories and clears metabolic waste built up while awake.",
+                    kind: .scenario,
+                    category: "Real-World"
                 )
             ]
         default:
