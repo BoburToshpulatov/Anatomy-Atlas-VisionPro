@@ -27,12 +27,14 @@ final class AppModel {
     enum StudyMode: String, CaseIterable, Codable, Hashable {
         case explore
         case labels
+        case learn
         case quiz
 
         var title: String {
             switch self {
             case .explore: "Explore"
             case .labels: "Labels"
+            case .learn: "Learn"
             case .quiz: "Quiz"
             }
         }

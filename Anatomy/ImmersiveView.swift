@@ -666,6 +666,7 @@ private struct ImmersiveInstructionBar: View {
         switch mode {
         case .explore: "sparkles"
         case .labels: "hand.tap"
+        case .learn: "book"
         case .quiz: "questionmark.circle"
         }
     }
@@ -676,6 +677,8 @@ private struct ImmersiveInstructionBar: View {
             "Explore the organ in space • Use the carousel to switch organs"
         case .labels:
             "Tap any label to focus • Review each structure in the side panel"
+        case .learn:
+            "Read through each lesson section in the side panel"
         case .quiz:
             "Answer the quiz prompt in the side panel to track progress"
         }
@@ -1180,6 +1183,8 @@ private struct ImmersiveInfoPanel: View {
                         emptyMessage: organ.hasBundledModel ? "Select a floating label to focus on a structure." : "Detailed label mode will unlock when this organ model is available.",
                         onSelect: onAnnotationSelected
                     )
+                case .learn:
+                    LearnModeSection(organ: organ)
                 case .quiz:
                     QuizSection(
                         organ: organ,
@@ -1276,6 +1281,152 @@ private struct ImmersiveInfoPanel: View {
         .premiumImmersiveCard(cornerRadius: 32, fillOpacity: 0.08, borderOpacity: 0.09)
         .shadow(color: .black.opacity(0.30), radius: 26, y: 14)
         .rotation3DEffect(.degrees(-6), axis: (x: 0, y: 1, z: 0))
+    }
+}
+
+// MARK: - Learn Mode (Phase 1 reader)
+
+private struct LearnModeSection: View {
+    let organ: AnatomyOrgan
+    @State private var section: OrganLesson.Section = .overview
+
+    private var lesson: OrganLesson? { OrganLesson.lesson(for: organ.id) }
+
+    var body: some View {
+        if let lesson {
+            VStack(alignment: .leading, spacing: 16) {
+                // Section selector
+                HStack(spacing: 8) {
+                    ForEach(OrganLesson.Section.allCases) { sec in
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) { section = sec }
+                        } label: {
+                            Text(sec.rawValue)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(section == sec ? .white : .white.opacity(0.6))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background {
+                                    if section == sec {
+                                        Capsule().fill(organ.tint.opacity(0.30))
+                                    }
+                                }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+
+                content(for: lesson)
+            }
+        } else {
+            Text("A guided lesson for this organ is coming soon.")
+                .font(.body.weight(.medium))
+                .foregroundStyle(.white.opacity(0.7))
+        }
+    }
+
+    @ViewBuilder
+    private func content(for lesson: OrganLesson) -> some View {
+        switch section {
+        case .overview:
+            VStack(alignment: .leading, spacing: 8) {
+                Text(lesson.overview.heading)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(.white)
+                Text(lesson.overview.body)
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.84))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+        case .anatomy:
+            VStack(alignment: .leading, spacing: 16) {
+                ForEach(lesson.anatomy) { sec in
+                    VStack(alignment: .leading, spacing: 8) {
+                        AnatomyImage(slot: sec.image, tint: organ.tint)
+                            .frame(height: 150)
+                        Text(sec.name)
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(.white)
+                        Text(sec.blurb)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.82))
+                            .fixedSize(horizontal: false, vertical: true)
+                        FlowChips(items: sec.labels, tint: organ.tint)
+                    }
+                }
+            }
+
+        case .functionality:
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(lesson.functions) { topic in
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: topic.symbol)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(organ.tint)
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(topic.title)
+                                .font(.headline.weight(.semibold))
+                                .foregroundStyle(.white)
+                            Text(topic.explanation)
+                                .font(.callout.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.80))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+
+        case .realWorld:
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(lesson.realWorld) { note in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(note.scenario)
+                            .font(.headline.weight(.semibold))
+                            .foregroundStyle(organ.tint.opacity(0.96))
+                        Text(note.explanation)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.82))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+        case .summary:
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(lesson.summary.enumerated()), id: \.offset) { _, fact in
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.callout)
+                            .foregroundStyle(organ.tint.opacity(0.9))
+                        Text(fact)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.86))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Simple wrapping chip row for anatomy label lists.
+private struct FlowChips: View {
+    let items: [String]
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(items, id: \.self) { item in
+                Text(item)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.82))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(.white.opacity(0.07), in: Capsule())
+            }
+        }
     }
 }
 

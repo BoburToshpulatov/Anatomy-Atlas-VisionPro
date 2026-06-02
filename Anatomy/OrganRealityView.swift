@@ -54,9 +54,9 @@ struct OrganRealityView: View {
                 // callout lines stay aligned with the anatomy.
                 let motionRate = organ.pulseStyle == .heartbeat ? 0.55 : 0.40
                 let sway = showAnnotations ? 0 : sin(time * motionRate) * (organ.pulseStyle == .heartbeat ? 8 : 5)
-                // Slow continuous turntable spin in Explore mode (paused while labels are
-                // shown or a structure is focused, so callouts stay aligned).
-                let autoSpin: Double = (showAnnotations || selectedAnnotation != nil) ? 0 : time * 12.0
+                // Rotation removed — the organ is a curated educational subject, not a
+                // free-spin toy. A gentle sway/float only.
+                let autoSpin: Double = 0
                 let lift = sin(time * (organ.pulseStyle == .heartbeat ? 0.95 : 0.70)) * (showAnnotations ? 3 : (organ.pulseStyle == .heartbeat ? 10 : 7))
                 let organPulse: CGFloat = {
                     if showAnnotations { return 1.0 }
