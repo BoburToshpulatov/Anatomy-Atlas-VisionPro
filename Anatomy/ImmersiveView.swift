@@ -64,8 +64,20 @@ struct ImmersiveView: View {
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
     private var visibleAnnotationIDs: Set<String> {
         guard appModel.selectedStudyMode == .labels else { return [] }
-        // Labels mode shows every structure for the organ.
-        return Set(selectedOrgan.atlasNotes.map(\.id))
+        // If a structure is focused, show only it. Otherwise show a curated set of key
+        // labels — Labels mode is a clean reference layer, not the full lesson (that's
+        // Learn mode). Keeping the set small avoids overlap and tiny crowding.
+        if let id = appModel.selectedAnnotationID { return [id] }
+        switch selectedOrgan.id {
+        case "heart":
+            return ["heart-aorta", "heart-pulmonary-artery", "heart-left-atrium",
+                    "heart-right-atrium", "heart-left-ventricle"]
+        case "brain":
+            return ["brain-frontal", "brain-parietal", "brain-temporal",
+                    "brain-cerebellum", "brain-brainstem"]
+        default:
+            return Set(selectedOrgan.atlasNotes.prefix(5).map(\.id))
+        }
     }
     private var glowPosition: SIMD3<Float> {
         SIMD3<Float>(
@@ -1179,14 +1191,7 @@ private struct ImmersiveInfoPanel: View {
                 switch studyMode {
                 case .explore:
                     ImmersiveStudySection(title: "Key Functions", items: organ.functions, tint: organ.tint, symbols: organ.functionSymbols)
-                    ImmersiveStudySection(title: "Key Parts", items: organ.keyParts, tint: organ.tint)
-                    StructureListSection(
-                        notes: organ.atlasNotes,
-                        selectedAnnotationID: selectedAnnotation?.id,
-                        tint: organ.tint,
-                        emptyMessage: organ.hasBundledModel ? "Label overlays are available for this organ." : "Detailed labels will appear here when the spatial model is added.",
-                        onSelect: onAnnotationSelected
-                    )
+                    KeyStructuresSummary(count: organ.atlasNotes.count, tint: organ.tint)
                 case .labels:
                     PinnedStructureCard(
                         annotation: selectedAnnotation,
@@ -1621,6 +1626,40 @@ private struct PinnedStructureCard: View {
                     .foregroundStyle(.white.opacity(0.68))
                     .padding(.vertical, 4)
             }
+        }
+    }
+}
+
+/// Compact "Key Structures" summary used in Explore (the full list lives in Labels/Learn).
+private struct KeyStructuresSummary: View {
+    let count: Int
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Structures")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.white.opacity(0.80))
+                .textCase(.uppercase)
+                .tracking(0.6)
+
+            HStack(spacing: 12) {
+                Image(systemName: "square.stack.3d.up")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(tint)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(count) main structures")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text("Open Labels to explore them in space, or Learn for the full lesson.")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.62))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .premiumImmersiveCard(cornerRadius: DS.Radius.control, fillOpacity: 0.10, borderOpacity: 0.08)
         }
     }
 }

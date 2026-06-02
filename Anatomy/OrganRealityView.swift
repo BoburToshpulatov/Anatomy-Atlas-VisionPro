@@ -335,42 +335,44 @@ struct AnnotationBubble: View {
     private var frameAlignment: Alignment { note.side == .left ? .leading : .trailing }
 
     var body: some View {
-        VStack(alignment: alignment, spacing: 7) {
-            // Title pill — coloured dot + structure name
-            HStack(spacing: 9) {
+        VStack(alignment: alignment, spacing: 5) {
+            // Title pill — coloured dot + structure name (compact reference style)
+            HStack(spacing: 7) {
                 Circle()
                     .fill(isSelected ? tint : tint.opacity(isDimmed ? 0.4 : 0.85))
-                    .frame(width: 9, height: 9)
+                    .frame(width: 7, height: 7)
 
                 Text(note.title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(.white.opacity(isDimmed ? 0.56 : 0.98))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(isDimmed ? 0.55 : 0.98))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 11)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(Color.black.opacity(isSelected ? 0.60 : isDimmed ? 0.40 : 0.52))
+                    .fill(Color.black.opacity(isSelected ? 0.62 : isDimmed ? 0.42 : 0.54))
             )
             .overlay {
                 Capsule()
                     .strokeBorder(
-                        isSelected ? tint.opacity(0.85) : isDimmed ? Color.white.opacity(0.05) : Color.white.opacity(0.14),
+                        isSelected ? tint.opacity(0.9) : isDimmed ? Color.white.opacity(0.05) : Color.white.opacity(0.16),
                         lineWidth: isSelected ? 1.6 : 1.0
                     )
             }
-            .glassBackgroundEffect(in: Capsule())
-            .shadow(color: isSelected ? tint.opacity(0.28) : .black.opacity(0.18), radius: 10, y: 5)
+            .shadow(color: isSelected ? tint.opacity(0.28) : .black.opacity(0.20), radius: 8, y: 4)
 
-            // Description hanging below the pill (outside, like a medical callout)
-            Text(note.subtitle)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.white.opacity(isDimmed ? 0.34 : 0.66))
-                .lineLimit(2)
-                .multilineTextAlignment(note.side == .left ? .leading : .trailing)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, 6)
+            // Short description below the pill — only for the focused label, to keep the
+            // reference layer clean and overlap-free.
+            if isSelected {
+                Text(note.subtitle)
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.7))
+                    .lineLimit(2)
+                    .multilineTextAlignment(note.side == .left ? .leading : .trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 6)
+            }
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
         .scaleEffect(isSelected ? 1.04 : isDimmed ? 0.97 : 1)
