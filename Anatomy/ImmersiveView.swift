@@ -55,6 +55,8 @@ struct ImmersiveView: View {
         }
     }
     private var selectedIndex: Int { organs.firstIndex(where: { $0.id == appModel.selectedOrganID }) ?? 0 }
+    /// In Learn mode the organ and carousel recede so the reader becomes the focus.
+    private var learnActive: Bool { appModel.selectedStudyMode == .learn }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
     private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
@@ -167,7 +169,11 @@ struct ImmersiveView: View {
                     onAnnotationSelected: selectAnnotation
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
-                .scaleEffect(heroVisible ? 0.98 : 0.88)
+                .scaleEffect((heroVisible ? 0.98 : 0.88) * (learnActive ? 0.82 : 1.0))
+                // Recede the organ in Learn mode so the reader leads.
+                .opacity(learnActive ? 0.34 : 1.0)
+                .blur(radius: learnActive ? 6 : 0)
+                .animation(.easeInOut(duration: 0.4), value: learnActive)
                 // The hero organ is purely visual — all interaction happens through the
                 // label, panel and carousel attachments. Disabling hit testing on this
                 // large frame stops it from covering the carousel / panel tap areas.
@@ -222,8 +228,9 @@ struct ImmersiveView: View {
                         }
                     }
                 )
-                .frame(width: viewerLayout.panelWidth, height: ImmersiveLayoutConfig.panelHeight)
+                .frame(width: learnActive ? 980 : viewerLayout.panelWidth, height: ImmersiveLayoutConfig.panelHeight)
                 .opacity(panelVisible ? 1 : 0.001)
+                .animation(.spring(response: 0.5, dampingFraction: 0.86), value: learnActive)
             }
 
             Attachment(id: "carousel-stack") {
@@ -245,6 +252,8 @@ struct ImmersiveView: View {
                     .frame(height: ImmersiveLayoutConfig.carouselFrameHeight)
                 }
                 .frame(width: ImmersiveLayoutConfig.carouselStackWidth)
+                .opacity(learnActive ? 0.32 : 1.0)
+                .animation(.easeInOut(duration: 0.4), value: learnActive)
             }
         }
         .animation(.spring(response: 0.62, dampingFraction: 0.86), value: appModel.selectedOrganID)
@@ -1147,13 +1156,17 @@ private struct ImmersiveInfoPanel: View {
                             .background(organ.tint.opacity(0.16), in: Circle())
                     }
 
-                    Text(organ.description)
-                        .font(.title2.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.86))
-                        .lineLimit(4)
+                    if studyMode != .learn {
+                        Text(organ.description)
+                            .font(.title2.weight(.medium))
+                            .foregroundStyle(.white.opacity(0.86))
+                            .lineLimit(4)
+                    }
                 }
 
-                ProgressCard(progressFraction: progressFraction, progressText: progressText, tint: organ.tint)
+                if studyMode != .learn {
+                    ProgressCard(progressFraction: progressFraction, progressText: progressText, tint: organ.tint)
+                }
 
                 if let availability = organ.modelAvailabilityText {
                     AvailabilityCard(message: availability, tint: organ.tint)
@@ -1239,26 +1252,28 @@ private struct ImmersiveInfoPanel: View {
                     }
                     .buttonStyle(.plain)
 
-                    Button(action: {
-                        isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
-                    }) {
-                        HStack(spacing: 10) {
-                            Spacer()
-                            Image(systemName: isLearnMorePresented ? "xmark.circle" : "book")
-                                .font(.subheadline.weight(.semibold))
-                            Text(isLearnMorePresented ? "Close" : "Learn More")
-                                .font(.headline.weight(.semibold))
-                            Spacer()
+                    if studyMode != .learn {
+                        Button(action: {
+                            isLearnMorePresented ? onCloseLearnMore() : onOpenLearnMore()
+                        }) {
+                            HStack(spacing: 10) {
+                                Spacer()
+                                Image(systemName: isLearnMorePresented ? "xmark.circle" : "book")
+                                    .font(.subheadline.weight(.semibold))
+                                Text(isLearnMorePresented ? "Close" : "Learn More")
+                                    .font(.headline.weight(.semibold))
+                                Spacer()
+                            }
+                            .foregroundStyle(.white.opacity(0.92))
+                            .padding(.vertical, 14)
+                            .background(.white.opacity(0.06), in: Capsule())
+                            .overlay {
+                                Capsule()
+                                    .strokeBorder(.white.opacity(0.14), lineWidth: 1)
+                            }
                         }
-                        .foregroundStyle(.white.opacity(0.92))
-                        .padding(.vertical, 14)
-                        .background(.white.opacity(0.06), in: Capsule())
-                        .overlay {
-                            Capsule()
-                                .strokeBorder(.white.opacity(0.14), lineWidth: 1)
-                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 26)
                 .padding(.top, 14)
@@ -1294,29 +1309,58 @@ private struct LearnModeSection: View {
 
     var body: some View {
         if let lesson {
-            VStack(alignment: .leading, spacing: 16) {
-                // Section selector
-                HStack(spacing: 8) {
-                    ForEach(OrganLesson.Section.allCases) { sec in
+            HStack(alignment: .top, spacing: 24) {
+                // Left rail — "Learning Sections"
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Learning Sections")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .textCase(.uppercase)
+                        .tracking(0.6)
+                        .padding(.bottom, 4)
+
+                    ForEach(Array(OrganLesson.Section.allCases.enumerated()), id: \.element.id) { index, sec in
                         Button {
-                            withAnimation(.easeInOut(duration: 0.2)) { section = sec }
+                            withAnimation(.easeInOut(duration: 0.22)) { section = sec }
                         } label: {
-                            Text(sec.rawValue)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(section == sec ? .white : .white.opacity(0.6))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background {
-                                    if section == sec {
-                                        Capsule().fill(organ.tint.opacity(0.30))
-                                    }
-                                }
+                            HStack(spacing: 10) {
+                                Text("\(index + 1)")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(section == sec ? .white : .white.opacity(0.6))
+                                    .frame(width: 22, height: 22)
+                                    .background(
+                                        Circle().fill(section == sec ? organ.tint.opacity(0.9) : .white.opacity(0.08))
+                                    )
+                                Text(sec.rawValue)
+                                    .font(.subheadline.weight(section == sec ? .semibold : .medium))
+                                    .foregroundStyle(section == sec ? .white : .white.opacity(0.66))
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: DS.Radius.control, style: .continuous)
+                                    .fill(section == sec ? organ.tint.opacity(0.16) : .clear)
+                            )
                         }
                         .buttonStyle(.plain)
                     }
                 }
+                .frame(width: 210, alignment: .leading)
 
-                content(for: lesson)
+                // Content column
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 10) {
+                        Image(systemName: section.symbol)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(organ.tint)
+                        Text(section.rawValue)
+                            .font(.title2.weight(.bold))
+                            .foregroundStyle(.white)
+                    }
+                    content(for: lesson)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
             Text("A guided lesson for this organ is coming soon.")
