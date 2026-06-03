@@ -17,8 +17,6 @@ struct OrganRealityView: View {
     let isHeroVisible: Bool
     let onSelectAnnotation: (String) -> Void
 
-    @State private var loadError: String?
-
     private var selectedAnnotation: OrganAnnotation? {
         guard let selectedAnnotationID else { return nil }
         return organ.atlasNotes.first(where: { $0.id == selectedAnnotationID })
@@ -178,14 +176,10 @@ struct OrganRealityView: View {
                                             .blur(radius: highlightBloom ? 28 : 20)
                                             .blendMode(.screen)
                                     }
-                                    .onAppear { loadError = nil }
                                     .animation(.spring(response: 0.52, dampingFraction: 0.84), value: selectedAnnotationID)
                                     .animation(.spring(response: 0.82, dampingFraction: 0.86), value: isHeroVisible)
-                            case .failure(let error):
+                            case .failure:
                                 organPlaceholder(in: geometry, organPulse: organPulse, sway: sway, lift: lift, focusYaw: focusYaw, focusPitch: focusPitch, focusScale: focusScale, focusOffset: focusOffset)
-                                    .onAppear {
-                                        loadError = "Failed to load \(organ.modelName)\n\(String(describing: error))"
-                                    }
                             @unknown default:
                                 EmptyView()
                             }
@@ -201,17 +195,6 @@ struct OrganRealityView: View {
             }
         }
         .background(.clear)
-        .overlay(alignment: .bottomLeading) {
-            if let loadError {
-                Text(loadError)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.red.opacity(0.86), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .padding(18)
-            }
-        }
     }
 
     private func organPlaceholder(

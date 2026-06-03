@@ -8,33 +8,27 @@ This project is evolving toward a premium room-scale anatomy atlas where learner
 - answer guided quiz prompts
 - track progress across organs and study modes
 
-The current MVP includes real `Heart` and `Brain` model support, an immersive study scene, detached spatial labels, a right-side study panel, carousel-based organ switching, quiz flow, and persistent progress.
+The MVP scope is **Heart and Brain only**, presented as a premium educational experience:
+an immersive study scene, a textbook-style Learn mode, a clean Labels reference layer,
+an engaging Quiz, a right-side study panel, carousel-based organ switching, and persistent progress.
 
 ## Status
 
-Current phase: `MVP in active development`
+Current phase: `Premium educational MVP`
 
-Implemented now:
-- visionOS launcher window for entering study space
-- `ImmersiveSpace` study scene
-- study modes: `Explore`, `Labels`, `Quiz`
-- organ carousel switching
-- annotation tap focus
-- Learn More expansion
-- progress persistence in `AppModel`
-- real spatial model support for:
-  - Heart
-  - Brain
-- placeholder atlas entries for future organs:
-  - Lungs
-  - Liver
-  - Kidneys
-  - Stomach
-  - Skeleton
-  - Eye
-  - Ear
-  - Spine
-  - Intestines
+Implemented:
+- visionOS launcher window for entering the study space
+- `ImmersiveSpace` study scene (no manual rotation — curated presentation)
+- study modes: `Explore`, `Labels`, `Learn`, `Quiz`
+- **Learn mode**: sectioned textbook reader (Overview / Anatomy / Functionality / Real-World / Summary)
+- **Quiz**: typed questions (multiple choice, identify structure, match function, scenario) with feedback
+- design system (`DesignSystem.swift`) for consistent surfaces, radii, and spacing
+- educational content model (`EducationalContent.swift`) for Heart & Brain
+- asset-slot image system (`AnatomyAssets.swift`) with premium placeholders — see `IMAGE_ASSET_GUIDE.md`
+- organ carousel switching, annotation focus, persistent progress in `AppModel`
+- real spatial model support for **Heart** and **Brain**
+
+Scope is intentionally limited to Heart and Brain; the roadmap (`PLAN.md`) tracks the redesign phases.
 
 ## Tech Stack
 
@@ -124,42 +118,28 @@ open /Users/boburtoshpulatov/Desktop/Anatomy/Anatomy.xcodeproj
 xcodebuild -project Anatomy.xcodeproj -scheme Anatomy -destination 'generic/platform=visionOS' -derivedDataPath ./.derived-data build CODE_SIGNING_ALLOWED=NO
 ```
 
-## Current Organ Model Support
+## Organ Model Support
 
-Bundled and active:
+Bundled and active (MVP scope):
 - `Human_Heart.usdz`
 - `Human_Brain.usdz`
 
-Planned next:
-- Lungs
-- Liver
-- Kidneys
-- Stomach
-- Skeleton
-- Eye
-- Ear
-- Spine
-- Intestines
-
-If a model is not bundled yet, the app shows a polished placeholder state and availability messaging instead of a fake 3D anatomy render.
-
 ## MVP Goals
 
-- stable immersive anatomy study flow
-- clean state management
-- anatomy structure focus mode
-- guided quiz loop
+- stable immersive anatomy study flow across Explore / Labels / Learn / Quiz
+- premium, consistent educational presentation
+- textbook-quality Learn mode
+- engaging quiz with feedback
 - organ-by-organ progress tracking
-- scalable content pipeline for additional organs
+- drop-in educational illustrations via the asset-slot system
 
 ## Near-Term Roadmap
 
-- add a licensed lungs model
-- expand organ-specific label layouts
-- deepen Brain quiz and label coverage
-- improve structure highlighting and camera focus
+- add safe, openly-licensed anatomy illustrations (see `IMAGE_ASSET_GUIDE.md`)
 - validate interaction comfort on real Vision Pro hardware
+- deepen Heart and Brain lesson and quiz content
 
 ## Notes
 
-This repository is currently app-first and product-oriented. The priority is shipping a clear, stable, immersive anatomy MVP before expanding into a full atlas library.
+The priority is a clear, stable, premium educational MVP for Heart and Brain.
+See `PLAN.md` for the redesign roadmap and `IMAGE_ASSET_GUIDE.md` for adding artwork.
