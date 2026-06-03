@@ -279,44 +279,32 @@ private struct LauncherOrganCard: View {
 
 private struct LauncherSelectionCard: View {
     let organ: AnatomyOrgan
-    @Environment(AppModel.self) private var appModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                Text(organ.title)
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-
-                Spacer()
-
-                Text(appModel.progressFraction(for: organ) >= 0.999 ? "Completed" : appModel.selectedOrganID == organ.id ? appModel.selectedOrganProgressText : "\(Int((appModel.progressFraction(for: organ) * 100).rounded()))%")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(organ.tint.opacity(0.96))
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 7)
-                    .background(.white.opacity(0.06), in: Capsule())
-            }
+        // Concise selected-organ summary — title + one-line description + study prompt.
+        // No progress bar here (progress lives inside the study space); keeps the
+        // launcher's hierarchy focused on: choose organ → enter.
+        VStack(alignment: .leading, spacing: 8) {
+            Text(organ.title)
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
 
             Text(organ.shortDescription)
                 .font(.headline.weight(.medium))
-                .foregroundStyle(.white.opacity(0.84))
+                .foregroundStyle(.white.opacity(0.82))
 
             Text(organ.studyPrompt)
-                .font(.body.weight(.medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(organ.tint.opacity(0.96))
-
-            ProgressView(value: appModel.progressFraction(for: organ))
-                .tint(organ.tint)
         }
         .frame(maxWidth: 760, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 22)
         .padding(.vertical, 18)
-        .background(.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .glassBackgroundEffect(in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .strokeBorder(.white.opacity(0.12), lineWidth: 1)
+            RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
                 .allowsHitTesting(false)
         }
         .allowsHitTesting(false)

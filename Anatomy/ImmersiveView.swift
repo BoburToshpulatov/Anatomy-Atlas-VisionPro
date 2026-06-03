@@ -10,8 +10,8 @@ import RealityKit
 import RealityKitContent
 
 private enum ImmersiveLayoutConfig {
-    static let topBarPosition = SIMD3<Float>(0.0, 1.98, -1.30)
-    static let topBarWidth: CGFloat = 380
+    static let topBarPosition = SIMD3<Float>(0.0, 1.84, -1.30)
+    static let topBarWidth: CGFloat = 480
     static let auraSize: CGFloat = 1180
     static let heroFrame = CGSize(width: 1440, height: 1100)
     static let panelHeight: CGFloat = 1040
@@ -628,36 +628,28 @@ private struct ImmersiveModeBar: View {
     let onSelect: (String) -> Void
 
     var body: some View {
-        HStack(spacing: isCompact ? 8 : 10) {
+        HStack(spacing: isCompact ? 6 : 8) {
             ForEach(items, id: \.self) { item in
                 Button(action: { onSelect(item) }) {
                     Text(item)
-                        .font((isCompact ? Font.subheadline : .body).weight(item == selectedItem ? .semibold : .medium))
-                        .foregroundStyle(.white.opacity(item == selectedItem ? 0.96 : 0.60))
-                        .padding(.horizontal, isCompact ? 16 : 20)
-                        .padding(.vertical, isCompact ? 10 : 12)
+                        .font(.subheadline.weight(item == selectedItem ? .bold : .medium))
+                        .foregroundStyle(.white.opacity(item == selectedItem ? 1.0 : 0.58))
+                        .padding(.horizontal, isCompact ? 14 : 16)
+                        .padding(.vertical, isCompact ? 9 : 11)
                         .background {
                             if item == selectedItem {
                                 Capsule()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                accent.opacity(0.34),
-                                                .white.opacity(0.06)
-                                            ],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
+                                    .fill(accent.opacity(0.42))
+                                    .overlay(Capsule().strokeBorder(accent.opacity(0.6), lineWidth: 1))
                             }
                         }
                 }
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, isCompact ? 8 : 10)
-        .padding(.vertical, isCompact ? 7 : 7)
-        .background(.black.opacity(0.42), in: Capsule())
+        .padding(.horizontal, isCompact ? 7 : 8)
+        .padding(.vertical, 7)
+        .background(.black.opacity(0.5), in: Capsule())
         .glassBackgroundEffect(in: Capsule())
         .overlay {
             Capsule()
