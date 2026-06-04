@@ -451,7 +451,7 @@ struct ImmersiveView: View {
         if let note = selectedOrgan.atlasNotes[safe: index] {
             let layout = connectorLayout(for: note)
             SpatialConnectorAttachment(
-                side: note.side,
+                side: .left,
                 tint: selectedOrgan.tint,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
@@ -480,10 +480,19 @@ struct ImmersiveView: View {
 
     private func spatialLabelPosition(for note: OrganAnnotation) -> SIMD3<Float> {
         let placement = viewerLayout.placement(for: note)
-        let xOffset = placement.side == .left ? -Float(viewerLayout.labelLeftX) : Float(viewerLayout.labelRightX)
-        let x = labelsPosition.x + xOffset
-        let laneDelta = Float(0.50 - placement.lane)
-        let y = labelsPosition.y + (laneDelta * ImmersiveLayoutConfig.labelVerticalSpread)
+        // All labels sit in a clean column on the open LEFT side (the right is occupied
+        // by the study panel). Each still connects to its true anatomy anchor.
+        let x = labelsPosition.x - Float(viewerLayout.labelLeftX)
+        // Evenly space the visible labels in the column so they never overlap.
+        let visible = selectedOrgan.atlasNotes.filter { visibleAnnotationIDs.contains($0.id) }
+        let lane: Float
+        if visible.count > 1, let idx = visible.firstIndex(where: { $0.id == note.id }) {
+            lane = (Float(idx) + 0.5) / Float(visible.count)
+        } else {
+            lane = Float(placement.lane)
+        }
+        let laneDelta = 0.50 - lane
+        let y = labelsPosition.y + (laneDelta * ImmersiveLayoutConfig.labelVerticalSpread * 1.3)
         let zLift: Float = note.id == appModel.selectedAnnotationID ? ImmersiveLayoutConfig.labelSelectedLift : (appModel.selectedAnnotationID == nil ? ImmersiveLayoutConfig.labelIdleLift : ImmersiveLayoutConfig.labelDimmedLift)
         let anchorYDelta = Float(0.5 - placement.anchor.y)
         let z = labelsPosition.z + zLift + (anchorYDelta * ImmersiveLayoutConfig.labelDepthTilt)
