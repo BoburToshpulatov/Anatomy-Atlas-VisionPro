@@ -346,12 +346,11 @@ struct AnnotationBubble: View {
             }
             .shadow(color: isSelected ? tint.opacity(0.28) : .black.opacity(0.20), radius: 8, y: 4)
 
-            // Short description below the pill — only for the focused label, to keep the
-            // reference layer clean and overlap-free.
-            if isSelected {
+            // Short description below the pill (textbook-callout style, always shown).
+            if !isDimmed {
                 Text(note.subtitle)
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(isSelected ? 0.8 : 0.62))
                     .lineLimit(2)
                     .multilineTextAlignment(note.side == .left ? .leading : .trailing)
                     .fixedSize(horizontal: false, vertical: true)

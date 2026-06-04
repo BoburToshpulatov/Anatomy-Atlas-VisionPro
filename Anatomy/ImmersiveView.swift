@@ -66,8 +66,15 @@ struct ImmersiveView: View {
         }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
-    private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
-    private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
+    /// In Labels mode the whole study scene shifts left so both label columns have
+    /// room and the organ sits left-of-centre (like the reference layout).
+    private var labelsShiftX: Float { appModel.selectedStudyMode == .labels ? -0.30 : 0 }
+    private var heartPosition: SIMD3<Float> {
+        var p = viewerLayout.heroPosition; p.x += labelsShiftX; return p
+    }
+    private var labelsPosition: SIMD3<Float> {
+        var p = viewerLayout.labelsPosition; p.x += labelsShiftX; return p
+    }
     private var panelPosition: SIMD3<Float> { viewerLayout.panelPosition }
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
     private var visibleAnnotationIDs: Set<String> {
@@ -78,8 +85,9 @@ struct ImmersiveView: View {
         if let id = appModel.selectedAnnotationID { return [id] }
         switch selectedOrgan.id {
         case "heart":
-            return ["heart-aorta", "heart-pulmonary-artery", "heart-left-atrium",
-                    "heart-right-atrium", "heart-left-ventricle"]
+            // Balanced 3 per side: right-heart structures appear on the left, left-heart on the right.
+            return ["heart-aorta", "heart-left-atrium", "heart-left-ventricle",
+                    "heart-svc", "heart-right-atrium", "heart-right-ventricle"]
         case "brain":
             return ["brain-frontal", "brain-parietal", "brain-temporal",
                     "brain-cerebellum", "brain-brainstem"]
@@ -154,6 +162,23 @@ struct ImmersiveView: View {
                 carouselEntity.position = carouselPosition
                 content.add(carouselEntity)
             }
+        } update: { content, attachments in
+            // Re-apply positions so labels/organ/panel react to organ, mode and selection.
+            attachments.entity(for: "top-bar")?.position = ImmersiveLayoutConfig.topBarPosition
+            attachments.entity(for: "ambient-aura")?.position = heartPosition + SIMD3<Float>(0.0, 0.02, -0.10)
+            attachments.entity(for: "hero-stage")?.position = heartPosition
+
+            for index in 0..<maxAnnotationSlots {
+                guard let note = selectedOrgan.atlasNotes[safe: index] else { continue }
+                attachments.entity(for: "connector-slot-\(index)")?.position = connectorLayout(for: note).position
+                attachments.entity(for: "anchor-slot-\(index)")?.position = anchorWorldPosition(for: note)
+                attachments.entity(for: "annotation-slot-\(index)")?.position = spatialLabelPosition(for: note)
+            }
+
+            attachments.entity(for: "panel")?.position = panelPosition
+            attachments.entity(for: "carousel-stack")?.position = carouselPosition
+            audio.move(to: heartPosition)
+            audio.play(organID: selectedOrgan.id)
         } attachments: {
             Attachment(id: "top-bar") {
                 VStack(spacing: 14) {
