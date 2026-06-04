@@ -984,7 +984,7 @@ extension AnatomyOrgan {
                 heroVisualOffset: .zero,
                 labelLeftX: 0.40,
                 labelRightX: 0.40,
-                labelWidth: 224,
+                labelWidth: 260,
                 labelSelectedZ: 92,
                 labelRestZ: 32,
                 annotationPlacements: [
@@ -1010,7 +1010,7 @@ extension AnatomyOrgan {
                 heroVisualOffset: CGSize(width: 26, height: 0),
                 labelLeftX: 0.40,
                 labelRightX: 0.40,
-                labelWidth: 224,
+                labelWidth: 260,
                 labelSelectedZ: 94,
                 labelRestZ: 34,
                 annotationPlacements: [
@@ -1036,7 +1036,7 @@ extension AnatomyOrgan {
                 heroVisualOffset: .zero,
                 labelLeftX: 0.42,
                 labelRightX: 0.42,
-                labelWidth: 230,
+                labelWidth: 264,
                 labelSelectedZ: 96,
                 labelRestZ: 34,
                 annotationPlacements: [

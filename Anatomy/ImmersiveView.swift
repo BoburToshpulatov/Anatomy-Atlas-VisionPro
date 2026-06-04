@@ -524,12 +524,14 @@ struct ImmersiveView: View {
         return SIMD3<Float>(labelsPosition.x + xOffset, laneY(for: note, side: side), labelsPosition.z + zLift)
     }
 
-    /// Anchor dot sits on the organ's contour (left or right) at the label's height, so
-    /// each leader line is a short, clean, near-horizontal callout.
+    /// Anchor dot sits on the actual structure on the organ, so the two-segment leader
+    /// line links the label to the real anatomy point.
     private func anchorWorldPosition(for note: OrganAnnotation) -> SIMD3<Float> {
-        let side = viewerLayout.placement(for: note).side
-        let x = heartPosition.x + (side == .left ? -0.13 : 0.13)
-        return SIMD3<Float>(x, laneY(for: note, side: side), heartPosition.z + 0.03)
+        let placement = viewerLayout.placement(for: note)
+        let x = heartPosition.x + Float(placement.anchor.x - 0.5) * ImmersiveLayoutConfig.organAnchorSpreadX
+        let y = heartPosition.y + Float(0.5 - placement.anchor.y) * ImmersiveLayoutConfig.organAnchorSpreadY
+        let z = heartPosition.z + (placement.side == .right ? 0.03 : 0.02)
+        return SIMD3<Float>(x, y, z)
     }
 
     private func connectorLayout(for note: OrganAnnotation) -> ConnectorLayout {
@@ -944,24 +946,27 @@ private struct SpatialConnectorAttachment: View {
         let pulse = isSelected ? 1.0 : 0.92
 
         Canvas { context, size in
-            // Clean single leader line from the anatomy anchor to the label.
-            let anchorX: CGFloat = side == .left ? size.width - 6 : 6
+            // Premium two-segment callout: horizontal run from the label, then an angled
+            // segment to the anatomy dot.
             let labelX: CGFloat  = side == .left ? 6 : size.width - 6
-            let labelAbove = deltaY < 0
-            let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
+            let anchorX: CGFloat = side == .left ? size.width - 6 : 6
+            let labelAbove = deltaY > 0
             let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
+            let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
+            let kneeX: CGFloat   = side == .left ? size.width * 0.46 : size.width * 0.54
 
             var path = Path()
-            path.move(to: CGPoint(x: anchorX, y: anchorY))
-            path.addLine(to: CGPoint(x: labelX, y: labelY))
+            path.move(to: CGPoint(x: labelX, y: labelY))
+            path.addLine(to: CGPoint(x: kneeX, y: labelY))     // horizontal run
+            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // angled to the dot
 
-            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.22 : 0.7
+            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.28 : 0.8
             let lineColor: Color = isSelected ? tint : .white
 
             context.stroke(
                 path,
                 with: .color(lineColor.opacity(baseOpacity)),
-                style: StrokeStyle(lineWidth: isSelected ? 2.0 * pulse : 1.3, lineCap: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.5, lineCap: .round, lineJoin: .round)
             )
         }
         .frame(width: width, height: height)

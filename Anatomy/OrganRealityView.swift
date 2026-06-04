@@ -327,12 +327,12 @@ struct AnnotationBubble: View {
                     .frame(width: isSelected ? 8 : 7, height: isSelected ? 8 : 7)
 
                 Text(note.title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.98))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 13)
-            .padding(.vertical, 8)
+            .padding(.horizontal, 15)
+            .padding(.vertical, 9)
             .background(
                 Capsule().fill(isSelected ? tint.opacity(0.30) : Color.black.opacity(0.55))
             )
@@ -347,8 +347,8 @@ struct AnnotationBubble: View {
 
             // Short description below the pill (textbook-callout style, always shown).
             Text(note.subtitle)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.white.opacity(isSelected ? 0.85 : 0.6))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(isSelected ? 0.88 : 0.64))
                 .lineLimit(2)
                 .multilineTextAlignment(note.side == .left ? .leading : .trailing)
                 .fixedSize(horizontal: false, vertical: true)
