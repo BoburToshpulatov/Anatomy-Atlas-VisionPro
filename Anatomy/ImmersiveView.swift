@@ -57,6 +57,14 @@ struct ImmersiveView: View {
     private var selectedIndex: Int { organs.firstIndex(where: { $0.id == appModel.selectedOrganID }) ?? 0 }
     /// In Learn mode the organ and carousel recede so the reader becomes the focus.
     private var learnActive: Bool { appModel.selectedStudyMode == .learn }
+    /// Panel width per mode — narrower in Labels so right-side callouts have room.
+    private var panelWidthForMode: CGFloat {
+        switch appModel.selectedStudyMode {
+        case .learn:  return 980
+        case .labels: return 660
+        default:      return viewerLayout.panelWidth
+        }
+    }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
     private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
@@ -242,9 +250,9 @@ struct ImmersiveView: View {
                         }
                     }
                 )
-                .frame(width: learnActive ? 980 : viewerLayout.panelWidth, height: ImmersiveLayoutConfig.panelHeight)
+                .frame(width: panelWidthForMode, height: ImmersiveLayoutConfig.panelHeight)
                 .opacity(panelVisible ? 1 : 0.001)
-                .animation(.spring(response: 0.5, dampingFraction: 0.86), value: learnActive)
+                .animation(.spring(response: 0.5, dampingFraction: 0.86), value: appModel.selectedStudyMode)
             }
 
             Attachment(id: "carousel-stack") {
@@ -451,7 +459,7 @@ struct ImmersiveView: View {
         if let note = selectedOrgan.atlasNotes[safe: index] {
             let layout = connectorLayout(for: note)
             SpatialConnectorAttachment(
-                side: .left,
+                side: viewerLayout.placement(for: note).side,
                 tint: selectedOrgan.tint,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
@@ -480,19 +488,21 @@ struct ImmersiveView: View {
 
     private func spatialLabelPosition(for note: OrganAnnotation) -> SIMD3<Float> {
         let placement = viewerLayout.placement(for: note)
-        // All labels sit in a clean column on the open LEFT side (the right is occupied
-        // by the study panel). Each still connects to its true anatomy anchor.
-        let x = labelsPosition.x - Float(viewerLayout.labelLeftX)
-        // Evenly space the visible labels in the column so they never overlap.
-        let visible = selectedOrgan.atlasNotes.filter { visibleAnnotationIDs.contains($0.id) }
+        // Labels sit on BOTH sides of the organ (clean anatomy-callout columns).
+        let xOffset = placement.side == .left ? -Float(viewerLayout.labelLeftX) : Float(viewerLayout.labelRightX)
+        let x = labelsPosition.x + xOffset
+        // Evenly space the visible labels within their own side so they never overlap.
+        let sideNotes = selectedOrgan.atlasNotes.filter {
+            visibleAnnotationIDs.contains($0.id) && viewerLayout.placement(for: $0).side == placement.side
+        }
         let lane: Float
-        if visible.count > 1, let idx = visible.firstIndex(where: { $0.id == note.id }) {
-            lane = (Float(idx) + 0.5) / Float(visible.count)
+        if sideNotes.count > 1, let idx = sideNotes.firstIndex(where: { $0.id == note.id }) {
+            lane = (Float(idx) + 0.5) / Float(sideNotes.count)
         } else {
             lane = Float(placement.lane)
         }
         let laneDelta = 0.50 - lane
-        let y = labelsPosition.y + (laneDelta * ImmersiveLayoutConfig.labelVerticalSpread * 1.3)
+        let y = labelsPosition.y + (laneDelta * ImmersiveLayoutConfig.labelVerticalSpread * 1.25)
         let zLift: Float = note.id == appModel.selectedAnnotationID ? ImmersiveLayoutConfig.labelSelectedLift : (appModel.selectedAnnotationID == nil ? ImmersiveLayoutConfig.labelIdleLift : ImmersiveLayoutConfig.labelDimmedLift)
         let anchorYDelta = Float(0.5 - placement.anchor.y)
         let z = labelsPosition.z + zLift + (anchorYDelta * ImmersiveLayoutConfig.labelDepthTilt)
@@ -919,37 +929,24 @@ private struct SpatialConnectorAttachment: View {
         let pulse = isSelected ? 1.0 : 0.92
 
         Canvas { context, size in
-            // Anatomy callout: anchor-side edge → horizontal run to label x → vertical drop to label end
-            let anchorX: CGFloat = side == .left ? size.width - 8 : 8
-            let labelX: CGFloat  = side == .left ? 8 : size.width - 8
+            // Clean single leader line from the anatomy anchor to the label.
+            let anchorX: CGFloat = side == .left ? size.width - 6 : 6
+            let labelX: CGFloat  = side == .left ? 6 : size.width - 6
             let labelAbove = deltaY < 0
-            let labelY: CGFloat  = labelAbove ? 10 : size.height - 10
-
-            let start  = CGPoint(x: anchorX, y: size.height * 0.5)
-            let elbow  = CGPoint(x: labelX,  y: size.height * 0.5)   // horizontal first
-            let end    = CGPoint(x: labelX,  y: labelY)               // then vertical
+            let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
+            let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
 
             var path = Path()
-            path.move(to: start)
-            path.addLine(to: elbow)
-            path.addLine(to: end)
+            path.move(to: CGPoint(x: anchorX, y: anchorY))
+            path.addLine(to: CGPoint(x: labelX, y: labelY))
 
-            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.30 : 0.92
+            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.22 : 0.7
             let lineColor: Color = isSelected ? tint : .white
-            let colors: [Color] = [
-                lineColor.opacity(baseOpacity),
-                lineColor.opacity(baseOpacity * 0.55)
-            ]
-            let gradient = Gradient(colors: side == .left ? colors : colors.reversed())
 
             context.stroke(
                 path,
-                with: .linearGradient(
-                    gradient,
-                    startPoint: CGPoint(x: 0, y: size.height * 0.5),
-                    endPoint: CGPoint(x: size.width, y: size.height * 0.5)
-                ),
-                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.9, lineCap: .round, lineJoin: .round)
+                with: .color(lineColor.opacity(baseOpacity)),
+                style: StrokeStyle(lineWidth: isSelected ? 2.0 * pulse : 1.3, lineCap: .round)
             )
         }
         .frame(width: width, height: height)
