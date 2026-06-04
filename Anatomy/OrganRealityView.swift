@@ -315,8 +315,9 @@ struct AnnotationBubble: View {
     let isDimmed: Bool
     let tint: Color
 
-    private var alignment: HorizontalAlignment { note.side == .left ? .leading : .trailing }
-    private var frameAlignment: Alignment { note.side == .left ? .leading : .trailing }
+    // Left-side callout column → always lead-align.
+    private var alignment: HorizontalAlignment { .leading }
+    private var frameAlignment: Alignment { .leading }
 
     var body: some View {
         VStack(alignment: alignment, spacing: 5) {
@@ -353,7 +354,7 @@ struct AnnotationBubble: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.white.opacity(0.7))
                     .lineLimit(2)
-                    .multilineTextAlignment(note.side == .left ? .leading : .trailing)
+                    .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.horizontal, 6)
             }
