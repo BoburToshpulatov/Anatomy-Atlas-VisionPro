@@ -804,25 +804,21 @@ private struct ImmersiveHeroStage: View {
                     .frame(width: preset.floorGlowWidth * 0.50, height: preset.floorGlowHeight * 0.36)
                     .blur(radius: 12)
 
-                // Crisp graded concentric rings (thin → premium)
-                ForEach(Array([0.92, 0.70, 0.50].enumerated()), id: \.offset) { i, scale in
+                // Crisp, evenly concentric rings — clean and centered.
+                ForEach(Array([1.04, 0.86, 0.66, 0.46].enumerated()), id: \.offset) { i, scale in
                     Ellipse()
                         .stroke(
-                            (i == 1 ? organ.tint : Color.white).opacity(i == 0 ? 0.14 : i == 1 ? 0.34 : 0.20),
-                            lineWidth: i == 1 ? 1.5 : 1.0
+                            (i == 2 ? organ.tint : Color.white).opacity([0.08, 0.16, 0.40, 0.22][i]),
+                            lineWidth: i == 2 ? 1.6 : 1.0
                         )
                         .frame(width: preset.floorGlowWidth * scale, height: preset.floorGlowHeight * scale)
                 }
 
-                // Bright top rim — the sharp edge of the disc
+                // Defined accent rim — even all the way around (no side bias).
                 Ellipse()
-                    .stroke(
-                        LinearGradient(colors: [organ.tint.opacity(0.85), .white.opacity(0.5), organ.tint.opacity(0.85)],
-                                       startPoint: .leading, endPoint: .trailing),
-                        lineWidth: 1.8
-                    )
-                    .frame(width: preset.floorGlowWidth * 0.70, height: preset.floorGlowHeight * 0.50)
-                    .blur(radius: 0.4)
+                    .strokeBorder(organ.tint.opacity(0.7), lineWidth: 1.6)
+                    .frame(width: preset.floorGlowWidth * 0.66, height: preset.floorGlowHeight * 0.46)
+                    .shadow(color: organ.tint.opacity(0.5), radius: 6)
             }
             .offset(y: preset.stageHeight * pedestalFraction)
             .offset(z: -44)
