@@ -59,7 +59,11 @@ struct ImmersiveView: View {
     private var learnActive: Bool { appModel.selectedStudyMode == .learn }
     /// Panel width per mode — narrower in Labels so right-side callouts have room.
     private var panelWidthForMode: CGFloat {
-        appModel.selectedStudyMode == .learn ? 980 : viewerLayout.panelWidth
+        switch appModel.selectedStudyMode {
+        case .learn:  return 980
+        case .labels: return 600   // narrower so right-side callouts have room
+        default:      return viewerLayout.panelWidth
+        }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
@@ -455,7 +459,7 @@ struct ImmersiveView: View {
         if let note = selectedOrgan.atlasNotes[safe: index] {
             let layout = connectorLayout(for: note)
             SpatialConnectorAttachment(
-                side: .left,
+                side: viewerLayout.placement(for: note).side,
                 tint: selectedOrgan.tint,
                 isSelected: note.id == appModel.selectedAnnotationID,
                 isDimmed: appModel.selectedAnnotationID != nil && note.id != appModel.selectedAnnotationID,
@@ -482,30 +486,34 @@ struct ImmersiveView: View {
         }
     }
 
-    /// Even vertical lane (0…1, top→bottom) for a label among the currently visible set,
-    /// so the left callout column is always evenly spaced with no overlap.
-    private func labelLane(for note: OrganAnnotation) -> Float {
-        let visible = selectedOrgan.atlasNotes.filter { visibleAnnotationIDs.contains($0.id) }
-        guard visible.count > 1, let idx = visible.firstIndex(where: { $0.id == note.id }) else { return 0.5 }
-        return (Float(idx) + 0.5) / Float(visible.count)
+    /// Even vertical lane for a label among the visible labels on its OWN side, so each
+    /// side forms a tidy, non-overlapping column.
+    private func sideLane(for note: OrganAnnotation, side: OrganAnnotation.Side) -> Float {
+        let sideNotes = selectedOrgan.atlasNotes.filter {
+            visibleAnnotationIDs.contains($0.id) && viewerLayout.placement(for: $0).side == side
+        }
+        guard sideNotes.count > 1, let idx = sideNotes.firstIndex(where: { $0.id == note.id }) else { return 0.5 }
+        // Keep the column within the middle band so it stays beside the organ.
+        return 0.18 + (Float(idx) + 0.5) / Float(sideNotes.count) * 0.64
     }
 
-    private func labelLaneY(for note: OrganAnnotation) -> Float {
-        labelsPosition.y + (0.50 - labelLane(for: note)) * ImmersiveLayoutConfig.labelVerticalSpread * 1.4
+    private func laneY(for note: OrganAnnotation, side: OrganAnnotation.Side) -> Float {
+        labelsPosition.y + (0.50 - sideLane(for: note, side: side)) * ImmersiveLayoutConfig.labelVerticalSpread * 1.3
     }
 
     private func spatialLabelPosition(for note: OrganAnnotation) -> SIMD3<Float> {
-        // Clean left-side callout column (the right side is the study panel).
-        let x = labelsPosition.x - Float(viewerLayout.labelLeftX)
+        let side = viewerLayout.placement(for: note).side
+        let xOffset = side == .left ? -Float(viewerLayout.labelLeftX) : Float(viewerLayout.labelRightX)
         let zLift: Float = note.id == appModel.selectedAnnotationID ? ImmersiveLayoutConfig.labelSelectedLift : (appModel.selectedAnnotationID == nil ? ImmersiveLayoutConfig.labelIdleLift : ImmersiveLayoutConfig.labelDimmedLift)
-        return SIMD3<Float>(x, labelLaneY(for: note), labelsPosition.z + zLift)
+        return SIMD3<Float>(labelsPosition.x + xOffset, laneY(for: note, side: side), labelsPosition.z + zLift)
     }
 
-    /// Anchor dot sits on the organ's left contour at the label's height, so the leader
-    /// line is a short, clean, nearly-horizontal callout (no lines crossing the organ).
+    /// Anchor dot sits on the organ's contour (left or right) at the label's height, so
+    /// each leader line is a short, clean, near-horizontal callout.
     private func anchorWorldPosition(for note: OrganAnnotation) -> SIMD3<Float> {
-        let x = heartPosition.x - 0.14
-        return SIMD3<Float>(x, labelLaneY(for: note), heartPosition.z + 0.03)
+        let side = viewerLayout.placement(for: note).side
+        let x = heartPosition.x + (side == .left ? -0.13 : 0.13)
+        return SIMD3<Float>(x, laneY(for: note, side: side), heartPosition.z + 0.03)
     }
 
     private func connectorLayout(for note: OrganAnnotation) -> ConnectorLayout {
