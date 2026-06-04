@@ -10,7 +10,7 @@ import RealityKit
 import RealityKitContent
 
 private enum ImmersiveLayoutConfig {
-    static let topBarPosition = SIMD3<Float>(0.0, 1.84, -1.30)
+    static let topBarPosition = SIMD3<Float>(0.0, 1.92, -1.30)
     static let topBarWidth: CGFloat = 480
     static let auraSize: CGFloat = 1180
     static let heroFrame = CGSize(width: 1440, height: 1100)
@@ -743,11 +743,8 @@ private struct ImmersiveHeroStage: View {
     /// as a fraction of the stage height (larger = lower). Tune one value per model
     /// so the organ rests just above its rings.
     private var pedestalFraction: CGFloat {
-        switch organ.id {
-        case "heart": return 0.14
-        case "brain": return 0.28
-        default:      return 0.28
-        }
+        // Same pedestal placement for every organ — consistent study stage.
+        return 0.28
     }
 
     var body: some View {
