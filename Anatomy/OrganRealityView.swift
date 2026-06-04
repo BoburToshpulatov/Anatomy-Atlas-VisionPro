@@ -66,14 +66,15 @@ struct OrganRealityView: View {
                     }
                 }()
                 let shimmer = 0.76 + (sin(time * 0.8) * 0.08)
-                let focusYaw = (selectedAnnotation?.focusYaw ?? organ.baseYaw) + viewerLayout.heroYawOffset
-                let focusPitch = (selectedAnnotation?.focusPitch ?? organ.basePitch) + viewerLayout.heroPitchOffset
-                let focusScale = selectedAnnotation?.focusScale ?? 1
-                let selectedFocusOffset = selectedAnnotation?.focusOffset ?? .zero
-                let focusOffset = CGSize(
-                    width: selectedFocusOffset.width + viewerLayout.heroVisualOffset.width,
-                    height: selectedFocusOffset.height + viewerLayout.heroVisualOffset.height
-                )
+                // Selecting a label gently ROTATES the organ toward that structure only —
+                // it does NOT zoom in, scale up, or shift off-centre. Damp the rotation so
+                // the turn is calm and the organ stays balanced on its pedestal.
+                let rawYaw = (selectedAnnotation?.focusYaw ?? organ.baseYaw) + viewerLayout.heroYawOffset
+                let rawPitch = (selectedAnnotation?.focusPitch ?? organ.basePitch) + viewerLayout.heroPitchOffset
+                let focusYaw = (selectedAnnotation == nil) ? rawYaw : (organ.baseYaw + (rawYaw - organ.baseYaw) * 0.6)
+                let focusPitch = (selectedAnnotation == nil) ? rawPitch : (organ.basePitch + (rawPitch - organ.basePitch) * 0.5)
+                let focusScale: CGFloat = 1                       // no zoom on focus
+                let focusOffset = viewerLayout.heroVisualOffset   // no positional shift on focus
                 let highlightBloom = selectedAnnotation != nil
 
                 ZStack {
