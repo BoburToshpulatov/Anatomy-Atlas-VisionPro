@@ -72,10 +72,8 @@ struct ImmersiveView: View {
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
     private var visibleAnnotationIDs: Set<String> {
         guard appModel.selectedStudyMode == .labels else { return [] }
-        // If a structure is focused, show only it. Otherwise show a curated set of key
-        // labels — Labels mode is a clean reference layer, not the full lesson (that's
-        // Learn mode). Keeping the set small avoids overlap and tiny crowding.
-        if let id = appModel.selectedAnnotationID { return [id] }
+        // All curated labels stay visible; selecting one highlights it and softly dims
+        // the rest (they do not disappear).
         switch selectedOrgan.id {
         case "heart":
             // Balanced 3 per side: right-heart structures appear on the left, left-heart on the right.

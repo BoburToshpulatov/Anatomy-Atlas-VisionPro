@@ -69,10 +69,10 @@ struct OrganRealityView: View {
                 // Selecting a label gently ROTATES the organ toward that structure only —
                 // it does NOT zoom in, scale up, or shift off-centre. Damp the rotation so
                 // the turn is calm and the organ stays balanced on its pedestal.
-                let rawYaw = (selectedAnnotation?.focusYaw ?? organ.baseYaw) + viewerLayout.heroYawOffset
-                let rawPitch = (selectedAnnotation?.focusPitch ?? organ.basePitch) + viewerLayout.heroPitchOffset
-                let focusYaw = (selectedAnnotation == nil) ? rawYaw : (organ.baseYaw + (rawYaw - organ.baseYaw) * 0.6)
-                let focusPitch = (selectedAnnotation == nil) ? rawPitch : (organ.basePitch + (rawPitch - organ.basePitch) * 0.5)
+                // Organ stays calmly in place when a label is selected (the labels are a
+                // fixed reference layer); only the chosen label highlights.
+                let focusYaw = organ.baseYaw + viewerLayout.heroYawOffset
+                let focusPitch = organ.basePitch + viewerLayout.heroPitchOffset
                 let focusScale: CGFloat = 1                       // no zoom on focus
                 let focusOffset = viewerLayout.heroVisualOffset   // no positional shift on focus
                 let highlightBloom = selectedAnnotation != nil
@@ -320,44 +320,43 @@ struct AnnotationBubble: View {
 
     var body: some View {
         VStack(alignment: alignment, spacing: 5) {
-            // Title pill — coloured dot + structure name (compact reference style)
+            // Title pill — coloured dot + structure name
             HStack(spacing: 7) {
                 Circle()
-                    .fill(isSelected ? tint : tint.opacity(isDimmed ? 0.4 : 0.85))
-                    .frame(width: 7, height: 7)
+                    .fill(isSelected ? tint : tint.opacity(0.8))
+                    .frame(width: isSelected ? 8 : 7, height: isSelected ? 8 : 7)
 
                 Text(note.title)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(isDimmed ? 0.55 : 0.98))
+                    .foregroundStyle(.white.opacity(0.98))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 13)
             .padding(.vertical, 8)
             .background(
-                Capsule()
-                    .fill(Color.black.opacity(isSelected ? 0.62 : isDimmed ? 0.42 : 0.54))
+                Capsule().fill(isSelected ? tint.opacity(0.30) : Color.black.opacity(0.55))
             )
             .overlay {
                 Capsule()
                     .strokeBorder(
-                        isSelected ? tint.opacity(0.9) : isDimmed ? Color.white.opacity(0.05) : Color.white.opacity(0.16),
-                        lineWidth: isSelected ? 1.6 : 1.0
+                        isSelected ? tint.opacity(0.95) : Color.white.opacity(0.18),
+                        lineWidth: isSelected ? 1.8 : 1.0
                     )
             }
-            .shadow(color: isSelected ? tint.opacity(0.28) : .black.opacity(0.20), radius: 8, y: 4)
+            .shadow(color: isSelected ? tint.opacity(0.45) : .black.opacity(0.22), radius: isSelected ? 12 : 8, y: 4)
 
             // Short description below the pill (textbook-callout style, always shown).
-            if !isDimmed {
-                Text(note.subtitle)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.8 : 0.62))
-                    .lineLimit(2)
-                    .multilineTextAlignment(note.side == .left ? .leading : .trailing)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, 6)
-            }
+            Text(note.subtitle)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.white.opacity(isSelected ? 0.85 : 0.6))
+                .lineLimit(2)
+                .multilineTextAlignment(note.side == .left ? .leading : .trailing)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 6)
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
-        .scaleEffect(isSelected ? 1.04 : isDimmed ? 0.97 : 1)
+        // Selected pops forward; the rest stay fully visible (no harsh dim/hide).
+        .scaleEffect(isSelected ? 1.06 : 1.0)
+        .opacity(isDimmed ? 0.72 : 1.0)
     }
 }
