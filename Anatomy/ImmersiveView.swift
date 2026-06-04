@@ -66,15 +66,8 @@ struct ImmersiveView: View {
         }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
-    /// In Labels mode the whole study scene shifts left so both label columns have
-    /// room and the organ sits left-of-centre (like the reference layout).
-    private var labelsShiftX: Float { appModel.selectedStudyMode == .labels ? -0.30 : 0 }
-    private var heartPosition: SIMD3<Float> {
-        var p = viewerLayout.heroPosition; p.x += labelsShiftX; return p
-    }
-    private var labelsPosition: SIMD3<Float> {
-        var p = viewerLayout.labelsPosition; p.x += labelsShiftX; return p
-    }
+    private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
+    private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
     private var panelPosition: SIMD3<Float> { viewerLayout.panelPosition }
     private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
     private var visibleAnnotationIDs: Set<String> {
