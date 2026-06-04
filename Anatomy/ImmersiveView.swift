@@ -780,58 +780,49 @@ private struct ImmersiveHeroStage: View {
                 .blur(radius: 6)
                 .opacity(isGlowVisible ? 0.48 : 0)
 
-            // Museum study pedestal — layered concentric rings under organ
+            // Premium holographic study disc — soft halo, calm core, crisp graded rings.
             Group {
-                // Outermost soft glow disc
+                // Soft outer halo
                 Ellipse()
                     .fill(
                         RadialGradient(
-                            colors: [
-                                organ.tint.opacity(0.18),
-                                organ.tint.opacity(0.06),
-                                .clear
-                            ],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 240
+                            colors: [organ.tint.opacity(0.20), organ.tint.opacity(0.05), .clear],
+                            center: .center, startRadius: 10, endRadius: 260
                         )
                     )
-                    .frame(width: preset.floorGlowWidth * 1.05, height: preset.floorGlowHeight * 1.05)
-                    .blur(radius: 18)
+                    .frame(width: preset.floorGlowWidth * 1.15, height: preset.floorGlowHeight * 1.15)
+                    .blur(radius: 26)
 
-                // Outer ring
-                Ellipse()
-                    .stroke(.white.opacity(0.10), lineWidth: 1.2)
-                    .frame(width: preset.floorGlowWidth * 0.92, height: preset.floorGlowHeight * 0.84)
-                    .blur(radius: 0.6)
-
-                // Mid ring with tint
-                Ellipse()
-                    .stroke(organ.tint.opacity(0.22), lineWidth: 1.4)
-                    .frame(width: preset.floorGlowWidth * 0.72, height: preset.floorGlowHeight * 0.62)
-                    .blur(radius: 0.8)
-
-                // Inner ring — closest to organ base
-                Ellipse()
-                    .stroke(.white.opacity(0.18), lineWidth: 1.1)
-                    .frame(width: preset.floorGlowWidth * 0.54, height: preset.floorGlowHeight * 0.42)
-
-                // Bright tint pool at centre (reflection from organ)
+                // Calm glowing core the organ rests on
                 Ellipse()
                     .fill(
                         RadialGradient(
-                            colors: [
-                                organ.tint.opacity(0.32),
-                                organ.tint.opacity(0.12),
-                                .clear
-                            ],
-                            center: .center,
-                            startRadius: 4,
-                            endRadius: 120
+                            colors: [organ.tint.opacity(0.42), organ.tint.opacity(0.14), .clear],
+                            center: .center, startRadius: 2, endRadius: 130
                         )
                     )
-                    .frame(width: preset.floorGlowWidth * 0.42, height: preset.floorGlowHeight * 0.30)
-                    .blur(radius: 10)
+                    .frame(width: preset.floorGlowWidth * 0.50, height: preset.floorGlowHeight * 0.36)
+                    .blur(radius: 12)
+
+                // Crisp graded concentric rings (thin → premium)
+                ForEach(Array([0.92, 0.70, 0.50].enumerated()), id: \.offset) { i, scale in
+                    Ellipse()
+                        .stroke(
+                            (i == 1 ? organ.tint : Color.white).opacity(i == 0 ? 0.14 : i == 1 ? 0.34 : 0.20),
+                            lineWidth: i == 1 ? 1.5 : 1.0
+                        )
+                        .frame(width: preset.floorGlowWidth * scale, height: preset.floorGlowHeight * scale)
+                }
+
+                // Bright top rim — the sharp edge of the disc
+                Ellipse()
+                    .stroke(
+                        LinearGradient(colors: [organ.tint.opacity(0.85), .white.opacity(0.5), organ.tint.opacity(0.85)],
+                                       startPoint: .leading, endPoint: .trailing),
+                        lineWidth: 1.8
+                    )
+                    .frame(width: preset.floorGlowWidth * 0.70, height: preset.floorGlowHeight * 0.50)
+                    .blur(radius: 0.4)
             }
             .offset(y: preset.stageHeight * pedestalFraction)
             .offset(z: -44)
