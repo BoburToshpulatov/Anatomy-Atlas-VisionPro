@@ -911,7 +911,8 @@ private struct SpatialAnnotationAttachment: View {
             .opacity(Double(revealAmount) * (isDimmed ? 0.56 : 1))
             .offset(y: (1 - revealAmount) * 10)
             .offset(z: isSelected ? selectedZOffset : isDimmed ? restZOffset - 18 : restZOffset)
-            .scaleEffect(isSelected ? 1.015 : isDimmed ? 0.97 : 1.0)
+            // Scale handled inside the bubble (anchored to its inner edge so it never clips).
+            .scaleEffect(isDimmed ? 0.97 : 1.0)
             .animation(.spring(response: 0.50, dampingFraction: 0.82).delay(delay), value: isVisible)
             .contentShape(Rectangle())
             .allowsHitTesting(isVisible)
@@ -953,12 +954,13 @@ private struct SpatialConnectorAttachment: View {
             let labelAbove = deltaY > 0
             let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
             let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
-            let kneeX: CGFloat   = side == .left ? size.width * 0.46 : size.width * 0.54
+            // Long horizontal run from the label, then a short clean angle into the dot.
+            let kneeX: CGFloat   = side == .left ? size.width - 34 : 34
 
             var path = Path()
             path.move(to: CGPoint(x: labelX, y: labelY))
             path.addLine(to: CGPoint(x: kneeX, y: labelY))     // horizontal run
-            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // angled to the dot
+            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // short angle to the dot
 
             let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.22 : 0.8
             let lineColor: Color = isSelected ? tint : .white

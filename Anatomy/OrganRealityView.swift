@@ -367,8 +367,9 @@ struct AnnotationBubble: View {
                 .padding(.horizontal, 6)
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
-        // Selected pops forward; the rest recede just enough to focus, staying readable.
-        .scaleEffect(isSelected ? 1.1 : 1.0)
+        .padding(isSelected ? 6 : 0)   // breathing room so the scaled/glowing pill is never clipped
+        // Scale from the inner edge so the text never overflows the frame edge.
+        .scaleEffect(isSelected ? 1.08 : 1.0, anchor: note.side == .left ? .leading : .trailing)
         .opacity(isDimmed ? 0.5 : 1.0)
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
         .animation(.easeInOut(duration: 0.3), value: isDimmed)
