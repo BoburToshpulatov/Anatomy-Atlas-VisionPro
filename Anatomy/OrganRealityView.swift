@@ -321,42 +321,56 @@ struct AnnotationBubble: View {
     var body: some View {
         VStack(alignment: alignment, spacing: 5) {
             // Title pill — coloured dot + structure name
-            HStack(spacing: 7) {
+            HStack(spacing: 8) {
                 Circle()
                     .fill(isSelected ? tint : tint.opacity(0.8))
-                    .frame(width: isSelected ? 8 : 7, height: isSelected ? 8 : 7)
+                    .frame(width: isSelected ? 9 : 7, height: isSelected ? 9 : 7)
+                    .shadow(color: isSelected ? tint : .clear, radius: isSelected ? 5 : 0)
 
                 Text(note.title)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.98))
+                    .font(.headline.weight(isSelected ? .bold : .semibold))
+                    .foregroundStyle(.white)
                     .lineLimit(1)
             }
-            .padding(.horizontal, 15)
-            .padding(.vertical, 9)
+            .padding(.horizontal, isSelected ? 17 : 15)
+            .padding(.vertical, isSelected ? 11 : 9)
             .background(
-                Capsule().fill(isSelected ? tint.opacity(0.30) : Color.black.opacity(0.55))
+                Capsule().fill(
+                    isSelected
+                        ? AnyShapeStyle(LinearGradient(colors: [tint.opacity(0.85), tint.opacity(0.6)],
+                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
+                        : AnyShapeStyle(Color.black.opacity(0.55))
+                )
             )
             .overlay {
                 Capsule()
-                    .strokeBorder(
-                        isSelected ? tint.opacity(0.95) : Color.white.opacity(0.18),
-                        lineWidth: isSelected ? 1.8 : 1.0
-                    )
+                    .strokeBorder(isSelected ? .white.opacity(0.55) : Color.white.opacity(0.18),
+                                  lineWidth: isSelected ? 1.4 : 1.0)
             }
-            .shadow(color: isSelected ? tint.opacity(0.45) : .black.opacity(0.22), radius: isSelected ? 12 : 8, y: 4)
+            // Glowing halo around the selected pill for a clear, premium highlight.
+            .background(
+                Capsule()
+                    .fill(tint)
+                    .blur(radius: 16)
+                    .opacity(isSelected ? 0.5 : 0)
+                    .scaleEffect(1.15)
+            )
+            .shadow(color: isSelected ? tint.opacity(0.6) : .black.opacity(0.22), radius: isSelected ? 16 : 8, y: 4)
 
             // Short description below the pill (textbook-callout style, always shown).
             Text(note.subtitle)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.white.opacity(isSelected ? 0.88 : 0.64))
+                .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.64))
                 .lineLimit(2)
                 .multilineTextAlignment(note.side == .left ? .leading : .trailing)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 6)
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
-        // Selected pops forward; the rest stay fully visible (no harsh dim/hide).
-        .scaleEffect(isSelected ? 1.06 : 1.0)
-        .opacity(isDimmed ? 0.72 : 1.0)
+        // Selected pops forward; the rest recede just enough to focus, staying readable.
+        .scaleEffect(isSelected ? 1.1 : 1.0)
+        .opacity(isDimmed ? 0.5 : 1.0)
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
+        .animation(.easeInOut(duration: 0.3), value: isDimmed)
     }
 }

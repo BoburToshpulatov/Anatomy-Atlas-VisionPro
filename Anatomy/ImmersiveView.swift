@@ -960,17 +960,19 @@ private struct SpatialConnectorAttachment: View {
             path.addLine(to: CGPoint(x: kneeX, y: labelY))     // horizontal run
             path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // angled to the dot
 
-            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.28 : 0.8
+            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.22 : 0.8
             let lineColor: Color = isSelected ? tint : .white
 
             context.stroke(
                 path,
                 with: .color(lineColor.opacity(baseOpacity)),
-                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.5, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.5, lineCap: .round, lineJoin: .round)
             )
         }
         .frame(width: width, height: height)
+        .shadow(color: isSelected ? tint.opacity(0.8) : .clear, radius: isSelected ? 5 : 0)
         .opacity(isVisible ? 1 : 0.001)
+        .animation(.easeInOut(duration: 0.3), value: isSelected)
         .allowsHitTesting(false)
     }
 }
@@ -982,17 +984,24 @@ private struct SpatialAnchorDot: View {
     let isVisible: Bool
 
     var body: some View {
-        ZStack {
-            if isSelected {
+        TimelineView(.animation) { timeline in
+            // Gentle pulse on the selected dot for a clear, living highlight.
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let pulse = isSelected ? (1.0 + sin(t * 3.2) * 0.18) : 1.0
+            ZStack {
+                if isSelected {
+                    Circle()
+                        .fill(tint.opacity(0.4))
+                        .frame(width: 34, height: 34)
+                        .blur(radius: 8)
+                        .scaleEffect(pulse)
+                }
                 Circle()
-                    .fill(tint.opacity(0.32))
-                    .frame(width: 26, height: 26)
-                    .blur(radius: 6)
+                    .fill(isSelected ? tint : isDimmed ? .white.opacity(0.22) : .white.opacity(0.80))
+                    .frame(width: isSelected ? 13 : 7, height: isSelected ? 13 : 7)
+                    .overlay { if isSelected { Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5) } }
+                    .shadow(color: isSelected ? tint : .clear, radius: isSelected ? 8 : 0)
             }
-            Circle()
-                .fill(isSelected ? tint : isDimmed ? .white.opacity(0.26) : .white.opacity(0.80))
-                .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
-                .shadow(color: isSelected ? tint.opacity(0.55) : .clear, radius: isSelected ? 8 : 0)
         }
         .opacity(isVisible ? 1 : 0.001)
         .allowsHitTesting(false)
