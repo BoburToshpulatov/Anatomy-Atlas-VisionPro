@@ -334,33 +334,33 @@ struct AnnotationBubble: View {
             }
             .padding(.horizontal, isSelected ? 17 : 15)
             .padding(.vertical, isSelected ? 11 : 9)
+            // Premium dark highlight — the selected pill goes deeper/darker, never a bright colour fill.
             .background(
                 Capsule().fill(
                     isSelected
-                        ? AnyShapeStyle(LinearGradient(colors: [tint.opacity(0.85), tint.opacity(0.6)],
-                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
-                        : AnyShapeStyle(Color.black.opacity(0.55))
+                        ? AnyShapeStyle(Color.black.opacity(0.82))
+                        : AnyShapeStyle(Color.black.opacity(0.5))
                 )
             )
             .overlay {
                 Capsule()
-                    .strokeBorder(isSelected ? .white.opacity(0.55) : Color.white.opacity(0.18),
-                                  lineWidth: isSelected ? 1.4 : 1.0)
+                    .strokeBorder(isSelected ? tint.opacity(0.9) : Color.white.opacity(0.18),
+                                  lineWidth: isSelected ? 1.6 : 1.0)
             }
-            // Glowing halo around the selected pill for a clear, premium highlight.
+            // Soft tinted glow only — a quiet premium ring, not a coloured pill.
             .background(
                 Capsule()
-                    .fill(tint)
-                    .blur(radius: 16)
-                    .opacity(isSelected ? 0.5 : 0)
-                    .scaleEffect(1.15)
+                    .strokeBorder(tint, lineWidth: 3)
+                    .blur(radius: 8)
+                    .opacity(isSelected ? 0.55 : 0)
+                    .scaleEffect(1.08)
             )
-            .shadow(color: isSelected ? tint.opacity(0.6) : .black.opacity(0.22), radius: isSelected ? 16 : 8, y: 4)
+            .shadow(color: isSelected ? tint.opacity(0.45) : .black.opacity(0.22), radius: isSelected ? 14 : 8, y: 4)
 
             // Short description below the pill (textbook-callout style, always shown).
             Text(note.subtitle)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.64))
+                .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.7))
                 .lineLimit(2)
                 .multilineTextAlignment(note.side == .left ? .leading : .trailing)
                 .fixedSize(horizontal: false, vertical: true)
@@ -369,8 +369,8 @@ struct AnnotationBubble: View {
         .frame(maxWidth: .infinity, alignment: frameAlignment)
         .padding(isSelected ? 6 : 0)   // breathing room so the scaled/glowing pill is never clipped
         // Scale from the inner edge so the text never overflows the frame edge.
-        .scaleEffect(isSelected ? 1.08 : 1.0, anchor: note.side == .left ? .leading : .trailing)
-        .opacity(isDimmed ? 0.5 : 1.0)
+        .scaleEffect(isSelected ? 1.06 : 1.0, anchor: note.side == .left ? .leading : .trailing)
+        // Other labels stay fully visible — no dimming when one is tapped.
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
         .animation(.easeInOut(duration: 0.3), value: isDimmed)
     }

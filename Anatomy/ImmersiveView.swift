@@ -908,11 +908,10 @@ private struct SpatialAnnotationAttachment: View {
             let time = timeline.date.timeIntervalSinceReferenceDate
             let revealAmount: CGFloat = isVisible ? 1 : 0
             labelBody(time: time, revealAmount: revealAmount)
-            .opacity(Double(revealAmount) * (isDimmed ? 0.56 : 1))
+            // Other labels stay fully visible — only the selected one lifts forward.
+            .opacity(Double(revealAmount))
             .offset(y: (1 - revealAmount) * 10)
-            .offset(z: isSelected ? selectedZOffset : isDimmed ? restZOffset - 18 : restZOffset)
-            // Scale handled inside the bubble (anchored to its inner edge so it never clips).
-            .scaleEffect(isDimmed ? 0.97 : 1.0)
+            .offset(z: isSelected ? selectedZOffset : restZOffset)
             .animation(.spring(response: 0.50, dampingFraction: 0.82).delay(delay), value: isVisible)
             .contentShape(Rectangle())
             .allowsHitTesting(isVisible)
@@ -954,21 +953,21 @@ private struct SpatialConnectorAttachment: View {
             let labelAbove = deltaY > 0
             let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
             let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
-            // Long horizontal run from the label, then a short clean angle into the dot.
-            let kneeX: CGFloat   = side == .left ? size.width - 34 : 34
 
+            // Clean right-angle (90°) callout: horizontal run from the label, then a
+            // vertical drop straight into the anatomy dot.
             var path = Path()
             path.move(to: CGPoint(x: labelX, y: labelY))
-            path.addLine(to: CGPoint(x: kneeX, y: labelY))     // horizontal run
-            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // short angle to the dot
+            path.addLine(to: CGPoint(x: anchorX, y: labelY))   // horizontal run to the dot's column
+            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // vertical drop into the dot
 
-            let baseOpacity: Double = isSelected ? 1.0 : isDimmed ? 0.22 : 0.8
+            let baseOpacity: Double = isSelected ? 1.0 : 0.7
             let lineColor: Color = isSelected ? tint : .white
 
             context.stroke(
                 path,
                 with: .color(lineColor.opacity(baseOpacity)),
-                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.5, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.5, lineCap: .round, lineJoin: .miter)
             )
         }
         .frame(width: width, height: height)
@@ -999,7 +998,7 @@ private struct SpatialAnchorDot: View {
                         .scaleEffect(pulse)
                 }
                 Circle()
-                    .fill(isSelected ? tint : isDimmed ? .white.opacity(0.22) : .white.opacity(0.80))
+                    .fill(isSelected ? tint : .white.opacity(0.80))
                     .frame(width: isSelected ? 13 : 7, height: isSelected ? 13 : 7)
                     .overlay { if isSelected { Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5) } }
                     .shadow(color: isSelected ? tint : .clear, radius: isSelected ? 8 : 0)
