@@ -329,23 +329,40 @@ struct AnnotationBubble: View {
 
                 Text(note.title)
                     .font(.headline.weight(isSelected ? .bold : .semibold))
+                    .tracking(0.2)
                     .foregroundStyle(.white)
                     .lineLimit(1)
             }
             .padding(.horizontal, isSelected ? 17 : 15)
             .padding(.vertical, isSelected ? 11 : 9)
-            // Premium dark highlight — the selected pill goes deeper/darker, never a bright colour fill.
+            // Glassy premium pill: a thin material base with a subtle top-down dark gradient
+            // for depth (selected goes deeper), never a bright colour fill.
             .background(
-                Capsule().fill(
-                    isSelected
-                        ? AnyShapeStyle(Color.black.opacity(0.82))
-                        : AnyShapeStyle(Color.black.opacity(0.5))
-                )
+                Capsule()
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        Capsule().fill(
+                            LinearGradient(
+                                colors: isSelected
+                                    ? [Color.black.opacity(0.78), Color.black.opacity(0.9)]
+                                    : [Color.black.opacity(0.42), Color.black.opacity(0.6)],
+                                startPoint: .top, endPoint: .bottom
+                            )
+                        )
+                    )
             )
+            // Hairline rim with a brighter top edge for a crisp, glassy finish.
             .overlay {
                 Capsule()
-                    .strokeBorder(isSelected ? .white.opacity(0.85) : Color.white.opacity(0.18),
-                                  lineWidth: isSelected ? 1.6 : 1.0)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: isSelected
+                                ? [.white.opacity(0.9), .white.opacity(0.3)]
+                                : [.white.opacity(0.35), .white.opacity(0.1)],
+                            startPoint: .top, endPoint: .bottom
+                        ),
+                        lineWidth: isSelected ? 1.4 : 0.9
+                    )
             }
             // Soft neutral glow only — a quiet premium ring, no coloured (blue/red) bloom.
             .background(
@@ -355,15 +372,16 @@ struct AnnotationBubble: View {
                     .opacity(isSelected ? 0.4 : 0)
                     .scaleEffect(1.08)
             )
-            .shadow(color: .black.opacity(isSelected ? 0.4 : 0.22), radius: isSelected ? 14 : 8, y: 4)
+            .shadow(color: .black.opacity(isSelected ? 0.45 : 0.28), radius: isSelected ? 16 : 9, y: 4)
 
             // Short description below the pill (textbook-callout style, always shown).
             Text(note.subtitle)
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.7))
+                .foregroundStyle(.white.opacity(isSelected ? 0.92 : 0.66))
                 .lineLimit(2)
                 .multilineTextAlignment(note.side == .left ? .leading : .trailing)
                 .fixedSize(horizontal: false, vertical: true)
+                .shadow(color: .black.opacity(0.4), radius: 3, y: 1)   // legibility over the scene
                 .padding(.horizontal, 6)
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
