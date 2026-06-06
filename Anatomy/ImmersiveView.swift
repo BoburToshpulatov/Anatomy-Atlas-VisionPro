@@ -962,12 +962,14 @@ private struct SpatialConnectorAttachment: View {
             let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
             let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
 
-            // Clean right-angle (90°) callout: horizontal run from the label, then a
-            // vertical drop straight into the anatomy dot.
+            // Classic anatomy callout: a short horizontal stub at the label text, then a
+            // straight diagonal leader running into the anatomy dot.
+            let stub: CGFloat = 26
+            let kneeX: CGFloat = side == .left ? labelX + stub : labelX - stub
             var path = Path()
-            path.move(to: CGPoint(x: labelX, y: labelY))
-            path.addLine(to: CGPoint(x: anchorX, y: labelY))   // horizontal run to the dot's column
-            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // vertical drop into the dot
+            path.move(to: CGPoint(x: labelX, y: labelY))       // at the label text
+            path.addLine(to: CGPoint(x: kneeX, y: labelY))     // short horizontal stub
+            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // diagonal into the dot
 
             let baseOpacity: Double = isSelected ? 1.0 : 0.7
             // Neutral white leader lines — no coloured (blue/red) highlight on selection.
