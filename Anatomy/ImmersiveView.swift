@@ -962,27 +962,28 @@ private struct SpatialConnectorAttachment: View {
             let labelY: CGFloat  = labelAbove ? 6 : size.height - 6
             let anchorY: CGFloat = labelAbove ? size.height - 6 : 6
 
-            // Classic anatomy callout: a short horizontal stub at the label text, then a
-            // straight diagonal leader running into the anatomy dot.
-            let stub: CGFloat = 26
-            let kneeX: CGFloat = side == .left ? labelX + stub : labelX - stub
+            // Premium anatomy callout: a long, calm horizontal leader running from the
+            // label most of the way across, then a short diagonal that tucks into the
+            // anatomy dot right at the organ.
+            let elbow: CGFloat = min(34, size.width * 0.32)
+            let kneeX: CGFloat = side == .left ? anchorX - elbow : anchorX + elbow
             var path = Path()
             path.move(to: CGPoint(x: labelX, y: labelY))       // at the label text
-            path.addLine(to: CGPoint(x: kneeX, y: labelY))     // short horizontal stub
-            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // diagonal into the dot
+            path.addLine(to: CGPoint(x: kneeX, y: labelY))     // long horizontal run
+            path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // short diagonal into the dot
 
-            let baseOpacity: Double = isSelected ? 1.0 : 0.7
+            let baseOpacity: Double = isSelected ? 1.0 : 0.85
             // Neutral white leader lines — no coloured (blue/red) highlight on selection.
             let lineColor: Color = .white
 
             context.stroke(
                 path,
                 with: .color(lineColor.opacity(baseOpacity)),
-                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.4, lineCap: .round, lineJoin: .round)
+                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.6, lineCap: .round, lineJoin: .round)
             )
 
             // Small node where the line meets the label — a clean, premium "plug-in" point.
-            let nodeR: CGFloat = isSelected ? 3.4 : 2.6
+            let nodeR: CGFloat = isSelected ? 3.6 : 2.8
             let node = Path(ellipseIn: CGRect(x: labelX - nodeR, y: labelY - nodeR, width: nodeR * 2, height: nodeR * 2))
             context.fill(node, with: .color(lineColor.opacity(baseOpacity)))
         }
