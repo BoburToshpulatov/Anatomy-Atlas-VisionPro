@@ -993,14 +993,15 @@ extension AnatomyOrgan {
                 labelSelectedZ: 92,
                 labelRestZ: 32,
                 annotationPlacements: [
-                    "heart-aorta": .init(anchor: CGPoint(x: 0.58, y: 0.19), side: .right, lane: 0.14),
-                    "heart-pulmonary-artery": .init(anchor: CGPoint(x: 0.63, y: 0.34), side: .right, lane: 0.33),
-                    "heart-left-atrium": .init(anchor: CGPoint(x: 0.67, y: 0.50), side: .right, lane: 0.53),
-                    "heart-left-ventricle": .init(anchor: CGPoint(x: 0.61, y: 0.74), side: .right, lane: 0.74),
-                    "heart-svc": .init(anchor: CGPoint(x: 0.37, y: 0.23), side: .left, lane: 0.16),
-                    "heart-right-atrium": .init(anchor: CGPoint(x: 0.33, y: 0.49), side: .left, lane: 0.44),
-                    "heart-tricuspid": .init(anchor: CGPoint(x: 0.40, y: 0.62), side: .left, lane: 0.62),
-                    "heart-right-ventricle": .init(anchor: CGPoint(x: 0.42, y: 0.77), side: .left, lane: 0.80)
+                    // Anterior heart — dots tuned to the actual structures on the model.
+                    "heart-aorta": .init(anchor: CGPoint(x: 0.54, y: 0.13), side: .right, lane: 0.14),        // aortic arch, top centre
+                    "heart-pulmonary-artery": .init(anchor: CGPoint(x: 0.62, y: 0.30), side: .right, lane: 0.33),
+                    "heart-left-atrium": .init(anchor: CGPoint(x: 0.63, y: 0.40), side: .right, lane: 0.53),   // left auricle, upper right
+                    "heart-left-ventricle": .init(anchor: CGPoint(x: 0.59, y: 0.74), side: .right, lane: 0.74),// apex, lower
+                    "heart-svc": .init(anchor: CGPoint(x: 0.42, y: 0.17), side: .left, lane: 0.16),            // SVC, top beside aorta
+                    "heart-right-atrium": .init(anchor: CGPoint(x: 0.35, y: 0.42), side: .left, lane: 0.44),   // right atrium, upper left
+                    "heart-tricuspid": .init(anchor: CGPoint(x: 0.42, y: 0.58), side: .left, lane: 0.62),
+                    "heart-right-ventricle": .init(anchor: CGPoint(x: 0.45, y: 0.70), side: .left, lane: 0.80) // RV, lower-left anterior
                 ]
             )
         case ("heart", .frontRight):
@@ -1047,11 +1048,12 @@ extension AnatomyOrgan {
                 anchorSpreadX: 0.44,
                 anchorSpreadY: 0.52,
                 annotationPlacements: [
-                    "brain-parietal": .init(anchor: CGPoint(x: 0.55, y: 0.25), side: .right, lane: 0.12),
-                    "brain-frontal": .init(anchor: CGPoint(x: 0.69, y: 0.37), side: .right, lane: 0.28),
-                    "brain-temporal": .init(anchor: CGPoint(x: 0.64, y: 0.60), side: .right, lane: 0.50),
-                    "brain-cerebellum": .init(anchor: CGPoint(x: 0.31, y: 0.67), side: .left, lane: 0.66),
-                    "brain-brainstem": .init(anchor: CGPoint(x: 0.40, y: 0.80), side: .left, lane: 0.82)
+                    // Anterior brain — dot order matches label order to avoid crossed lines.
+                    "brain-frontal": .init(anchor: CGPoint(x: 0.60, y: 0.30), side: .right, lane: 0.28),    // frontal lobe, upper front
+                    "brain-parietal": .init(anchor: CGPoint(x: 0.66, y: 0.44), side: .right, lane: 0.12),   // parietal, upper side
+                    "brain-temporal": .init(anchor: CGPoint(x: 0.64, y: 0.62), side: .right, lane: 0.50),   // temporal lobe, lower side
+                    "brain-cerebellum": .init(anchor: CGPoint(x: 0.43, y: 0.74), side: .left, lane: 0.66),  // cerebellum, lower back
+                    "brain-brainstem": .init(anchor: CGPoint(x: 0.49, y: 0.88), side: .left, lane: 0.82)    // brainstem, central stalk
                 ]
             )
         default:
