@@ -529,8 +529,8 @@ struct ImmersiveView: View {
     /// line links the label to the real anatomy point.
     private func anchorWorldPosition(for note: OrganAnnotation) -> SIMD3<Float> {
         let placement = viewerLayout.placement(for: note)
-        let x = heartPosition.x + Float(placement.anchor.x - 0.5) * ImmersiveLayoutConfig.organAnchorSpreadX
-        let y = heartPosition.y + Float(0.5 - placement.anchor.y) * ImmersiveLayoutConfig.organAnchorSpreadY
+        let x = heartPosition.x + Float(placement.anchor.x - 0.5) * viewerLayout.anchorSpreadX
+        let y = heartPosition.y + Float(0.5 - placement.anchor.y) * viewerLayout.anchorSpreadY
         let z = heartPosition.z + (placement.side == .right ? 0.03 : 0.02)
         return SIMD3<Float>(x, y, z)
     }
@@ -976,8 +976,13 @@ private struct SpatialConnectorAttachment: View {
             context.stroke(
                 path,
                 with: .color(lineColor.opacity(baseOpacity)),
-                style: StrokeStyle(lineWidth: isSelected ? 2.4 * pulse : 1.5, lineCap: .round, lineJoin: .miter)
+                style: StrokeStyle(lineWidth: isSelected ? 2.2 * pulse : 1.4, lineCap: .round, lineJoin: .round)
             )
+
+            // Small node where the line meets the label — a clean, premium "plug-in" point.
+            let nodeR: CGFloat = isSelected ? 3.4 : 2.6
+            let node = Path(ellipseIn: CGRect(x: labelX - nodeR, y: labelY - nodeR, width: nodeR * 2, height: nodeR * 2))
+            context.fill(node, with: .color(lineColor.opacity(baseOpacity)))
         }
         .frame(width: width, height: height)
         .shadow(color: isSelected ? .white.opacity(0.5) : .clear, radius: isSelected ? 4 : 0)
@@ -1007,9 +1012,13 @@ private struct SpatialAnchorDot: View {
                         .scaleEffect(pulse)
                 }
                 Circle()
-                    .fill(.white.opacity(isSelected ? 1.0 : 0.80))
-                    .frame(width: isSelected ? 12 : 7, height: isSelected ? 12 : 7)
-                    .overlay { if isSelected { Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5) } }
+                    .fill(.white.opacity(isSelected ? 1.0 : 0.9))
+                    .frame(width: isSelected ? 12 : 8, height: isSelected ? 12 : 8)
+                    .overlay {
+                        Circle().strokeBorder(.white.opacity(isSelected ? 0.7 : 0.35),
+                                              lineWidth: isSelected ? 1.5 : 0.8)
+                    }
+                    .shadow(color: .black.opacity(0.35), radius: 2)
                     .shadow(color: isSelected ? .white.opacity(0.6) : .clear, radius: isSelected ? 6 : 0)
             }
         }

@@ -40,6 +40,11 @@ struct AnatomyOrgan: Identifiable, Hashable {
         let labelWidth: CGFloat
         let labelSelectedZ: CGFloat
         let labelRestZ: CGFloat
+        // How far the anatomy anchor dots spread from the organ centre, in metres.
+        // Tuned per organ so the dots land on the actual structure (the brain renders
+        // smaller than the heart, so it needs a tighter spread).
+        var anchorSpreadX: Float = 0.54
+        var anchorSpreadY: Float = 0.60
         let annotationPlacements: [String: AnnotationPlacement]
 
         func placement(for note: OrganAnnotation) -> AnnotationPlacement {
@@ -1039,6 +1044,8 @@ extension AnatomyOrgan {
                 labelWidth: 264,
                 labelSelectedZ: 96,
                 labelRestZ: 34,
+                anchorSpreadX: 0.44,
+                anchorSpreadY: 0.52,
                 annotationPlacements: [
                     "brain-parietal": .init(anchor: CGPoint(x: 0.55, y: 0.25), side: .right, lane: 0.12),
                     "brain-frontal": .init(anchor: CGPoint(x: 0.69, y: 0.37), side: .right, lane: 0.28),
