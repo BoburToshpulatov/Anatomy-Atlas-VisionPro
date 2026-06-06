@@ -531,7 +531,9 @@ struct ImmersiveView: View {
         let placement = viewerLayout.placement(for: note)
         let x = heartPosition.x + Float(placement.anchor.x - 0.5) * viewerLayout.anchorSpreadX
         let y = heartPosition.y + Float(0.5 - placement.anchor.y) * viewerLayout.anchorSpreadY
-        let z = heartPosition.z + (placement.side == .right ? 0.03 : 0.02)
+        // Float the dot in front of the organ's front surface so it (and its leader line)
+        // is never occluded by the model.
+        let z = heartPosition.z + 0.14
         return SIMD3<Float>(x, y, z)
     }
 
@@ -547,7 +549,9 @@ struct ImmersiveView: View {
             position: SIMD3<Float>(
                 (anchor.x + labelInnerX) * 0.5,
                 (anchor.y + label.y) * 0.5,
-                min(anchor.z, label.z) + ImmersiveLayoutConfig.connectorDepthOffset
+                // Keep the whole leader line in front of the organ (use the more-forward
+                // of the two endpoints) so it never disappears behind the model.
+                max(anchor.z, label.z) + 0.01
             ),
             // visionOS renders attachment points at ~1360 pt per metre, so use that to
             // size the connector Canvas exactly to the world gap between label and dot.
