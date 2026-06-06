@@ -1069,46 +1069,28 @@ private struct ImmersiveCarouselCard: View {
     var body: some View {
         VStack(spacing: 11) {
             ZStack {
-                // Glassy card base with a subtle top highlight for depth.
+                // Calm glassy card base.
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.10), Color.black.opacity(isSelected ? 0.30 : 0.45)],
-                                    startPoint: .top, endPoint: .bottom
-                                )
-                            )
+                            .fill(Color.black.opacity(isSelected ? 0.34 : 0.46))
                     )
 
-                // Soft tint bloom behind the medallion.
-                Circle()
-                    .fill(organ.tint.opacity(isSelected ? 0.55 : 0.18))
-                    .frame(width: 76, height: 76)
-                    .blur(radius: 22)
-
-                // Premium circular medallion holding the icon.
+                // Neutral circular medallion holding the icon — calm, not shiny/tinted.
                 ZStack {
                     Circle()
                         .fill(.ultraThinMaterial)
-                        .overlay(Circle().fill(organ.tint.opacity(isSelected ? 0.22 : 0.10)))
+                        .overlay(Circle().fill(Color.black.opacity(0.2)))
                         .overlay(
-                            Circle().strokeBorder(
-                                isSelected ? organ.tint.opacity(0.8) : .white.opacity(0.18),
-                                lineWidth: isSelected ? 1.6 : 1.0
-                            )
+                            Circle().strokeBorder(.white.opacity(isSelected ? 0.3 : 0.16),
+                                                  lineWidth: 1.0)
                         )
                         .frame(width: 78, height: 78)
 
                     Image(systemName: organ.symbolName)
-                        .font(.system(size: isSelected ? 36 : 32, weight: .semibold))
-                        .foregroundStyle(
-                            isSelected
-                                ? AnyShapeStyle(organ.tint)
-                                : AnyShapeStyle(.white.opacity(0.9))
-                        )
-                        .shadow(color: isSelected ? organ.tint.opacity(0.6) : .clear, radius: 8)
+                        .font(.system(size: isSelected ? 34 : 32, weight: .semibold))
+                        .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.75))
                 }
             }
             .frame(width: 168, height: 130)
@@ -1116,11 +1098,11 @@ private struct ImmersiveCarouselCard: View {
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .strokeBorder(
-                        isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.14),
-                        lineWidth: isSelected ? 2.0 : 0.8
+                        isSelected ? organ.tint.opacity(0.6) : .white.opacity(0.14),
+                        lineWidth: isSelected ? 1.6 : 0.8
                     )
             }
-            .shadow(color: isSelected ? organ.tint.opacity(0.4) : .black.opacity(0.28), radius: isSelected ? 16 : 9, y: 3)
+            .shadow(color: .black.opacity(0.28), radius: 9, y: 3)
 
             VStack(spacing: 3) {
                 Text(organ.title)
