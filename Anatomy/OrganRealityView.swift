@@ -315,8 +315,9 @@ struct AnnotationBubble: View {
     let isDimmed: Bool
     let tint: Color
 
-    private var alignment: HorizontalAlignment { note.side == .left ? .leading : .trailing }
-    private var frameAlignment: Alignment { note.side == .left ? .leading : .trailing }
+    // Hug the organ-facing edge so the leader line emerges right from the pill/text.
+    private var alignment: HorizontalAlignment { note.side == .left ? .trailing : .leading }
+    private var frameAlignment: Alignment { note.side == .left ? .trailing : .leading }
 
     var body: some View {
         VStack(alignment: alignment, spacing: 5) {
@@ -369,7 +370,7 @@ struct AnnotationBubble: View {
         .frame(maxWidth: .infinity, alignment: frameAlignment)
         .padding(isSelected ? 6 : 0)   // breathing room so the scaled/glowing pill is never clipped
         // Scale from the inner edge so the text never overflows the frame edge.
-        .scaleEffect(isSelected ? 1.06 : 1.0, anchor: note.side == .left ? .leading : .trailing)
+        .scaleEffect(isSelected ? 1.06 : 1.0, anchor: note.side == .left ? .trailing : .leading)
         // Other labels stay fully visible — no dimming when one is tapped.
         .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isSelected)
         .animation(.easeInOut(duration: 0.3), value: isDimmed)
