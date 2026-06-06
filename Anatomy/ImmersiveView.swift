@@ -17,8 +17,8 @@ private enum ImmersiveLayoutConfig {
     static let panelHeight: CGFloat = 1040
     static let instructionOpacityWhenHidden = 0.001
     static let carouselStackWidth: CGFloat = 880
-    static let carouselFrameHeight: CGFloat = 210
-    static let bottomStackSpacing: CGFloat = 12
+    static let carouselFrameHeight: CGFloat = 280
+    static let bottomStackSpacing: CGFloat = 22
     static let labelVerticalSpread: Float = 0.58
     static let labelSelectedLift: Float = 0.04
     static let labelIdleLift: Float = 0.008
@@ -1045,10 +1045,10 @@ private struct ImmersiveCarousel: View {
     let onNavigateRight: () -> Void
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 24) {
             ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
 
-            HStack(spacing: 12) {
+            HStack(spacing: 22) {
                 ForEach(organs) { organ in
                     ImmersiveCarouselCard(
                         organ: organ,
@@ -1057,20 +1057,6 @@ private struct ImmersiveCarousel: View {
                     .onTapGesture { onSelect(organ.id) }
                 }
             }
-            .padding(10)
-            // Unified glassy dock holding the organ cards.
-            .background(
-                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
-                            .fill(Color.black.opacity(0.35))
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
-                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.8)
-            )
 
             ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
         }
@@ -1115,38 +1101,42 @@ private struct ImmersiveCarouselCard: View {
                     }
                 }
             }
-            .frame(width: 124, height: 96)
+            .frame(width: 168, height: 130)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                    .fill(Color.black.opacity(isSelected ? 0.30 : 0.45))
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                            .fill(Color.black.opacity(isSelected ? 0.28 : 0.42))
+                    )
             )
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .strokeBorder(
-                        isSelected ? organ.tint.opacity(0.85) : .white.opacity(0.10),
-                        lineWidth: isSelected ? 1.6 : 0.8
+                        isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.12),
+                        lineWidth: isSelected ? 2.0 : 0.8
                     )
             }
-            .shadow(color: isSelected ? organ.tint.opacity(0.35) : .clear, radius: 10, y: 2)
+            .shadow(color: isSelected ? organ.tint.opacity(0.35) : .black.opacity(0.25), radius: isSelected ? 14 : 8, y: 3)
 
-            VStack(spacing: 2) {
+            VStack(spacing: 3) {
                 Text(organ.title)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.78))
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.8))
 
                 Text(organ.tagline)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.45))
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.5))
             }
 
             // Slim accent underline for the active organ — premium, restrained selection cue.
             Capsule()
                 .fill(organ.tint)
-                .frame(width: isSelected ? 26 : 0, height: 3)
+                .frame(width: isSelected ? 30 : 0, height: 3)
                 .opacity(isSelected ? 1 : 0)
         }
-        .frame(width: 150)
-        .padding(.vertical, 6)
+        .frame(width: 196)
+        .padding(.vertical, 8)
         .contentShape(Rectangle())
         .scaleEffect(isSelected ? 1.03 : 1.0)
         .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
