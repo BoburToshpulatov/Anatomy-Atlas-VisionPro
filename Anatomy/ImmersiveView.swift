@@ -1041,6 +1041,7 @@ private struct ImmersiveCarousel: View {
     var body: some View {
         HStack(spacing: 24) {
             ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
+                .offset(y: -26)   // align with the thumbnail centre, not the text below
 
             HStack(spacing: 22) {
                 ForEach(organs) { organ in
@@ -1053,6 +1054,7 @@ private struct ImmersiveCarousel: View {
             }
 
             ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
+                .offset(y: -26)
         }
         .opacity(isVisible ? 1 : 0)
         .frame(maxWidth: .infinity)
@@ -1065,41 +1067,60 @@ private struct ImmersiveCarouselCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 9) {
+        VStack(spacing: 11) {
             ZStack {
-                // Soft tint bloom behind the icon.
-                RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                    .fill(
-                        RadialGradient(
-                            colors: [organ.tint.opacity(isSelected ? 0.45 : 0.12), .clear],
-                            center: .center, startRadius: 4, endRadius: 90
-                        )
-                    )
-
-                // Clean contained icon — 2D so it never overflows the card (unlike a 3D render).
-                Image(systemName: organ.symbolName)
-                    .font(.system(size: isSelected ? 50 : 44, weight: .semibold))
-                    .foregroundStyle(isSelected ? organ.tint : .white.opacity(0.85))
-                    .shadow(color: isSelected ? organ.tint.opacity(0.5) : .clear, radius: 10)
-            }
-            .frame(width: 168, height: 130)
-            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
-            .background(
+                // Glassy card base with a subtle top highlight for depth.
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                            .fill(Color.black.opacity(isSelected ? 0.28 : 0.42))
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.10), Color.black.opacity(isSelected ? 0.30 : 0.45)],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                            )
                     )
-            )
+
+                // Soft tint bloom behind the medallion.
+                Circle()
+                    .fill(organ.tint.opacity(isSelected ? 0.55 : 0.18))
+                    .frame(width: 76, height: 76)
+                    .blur(radius: 22)
+
+                // Premium circular medallion holding the icon.
+                ZStack {
+                    Circle()
+                        .fill(.ultraThinMaterial)
+                        .overlay(Circle().fill(organ.tint.opacity(isSelected ? 0.22 : 0.10)))
+                        .overlay(
+                            Circle().strokeBorder(
+                                isSelected ? organ.tint.opacity(0.8) : .white.opacity(0.18),
+                                lineWidth: isSelected ? 1.6 : 1.0
+                            )
+                        )
+                        .frame(width: 78, height: 78)
+
+                    Image(systemName: organ.symbolName)
+                        .font(.system(size: isSelected ? 36 : 32, weight: .semibold))
+                        .foregroundStyle(
+                            isSelected
+                                ? AnyShapeStyle(organ.tint)
+                                : AnyShapeStyle(.white.opacity(0.9))
+                        )
+                        .shadow(color: isSelected ? organ.tint.opacity(0.6) : .clear, radius: 8)
+                }
+            }
+            .frame(width: 168, height: 130)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .strokeBorder(
-                        isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.12),
+                        isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.14),
                         lineWidth: isSelected ? 2.0 : 0.8
                     )
             }
-            .shadow(color: isSelected ? organ.tint.opacity(0.35) : .black.opacity(0.25), radius: isSelected ? 14 : 8, y: 3)
+            .shadow(color: isSelected ? organ.tint.opacity(0.4) : .black.opacity(0.28), radius: isSelected ? 16 : 9, y: 3)
 
             VStack(spacing: 3) {
                 Text(organ.title)
