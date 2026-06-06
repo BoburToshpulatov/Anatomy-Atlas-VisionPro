@@ -327,7 +327,7 @@ struct ImmersiveView: View {
             withAnimation(.easeInOut(duration: 0.18)) {
                 labelsVisible = false
                 panelVisible = false
-                carouselVisible = false
+                // Carousel stays visible while switching organs.
             }
 
             try? await Task.sleep(for: .milliseconds(110))
@@ -358,12 +358,6 @@ struct ImmersiveView: View {
 
             withAnimation(.spring(response: 0.62, dampingFraction: 0.86)) {
                 panelVisible = true
-            }
-
-            try? await Task.sleep(for: .milliseconds(180))
-
-            withAnimation(.spring(response: 0.72, dampingFraction: 0.84)) {
-                carouselVisible = true
             }
 
             isSwitchingOrgan = false
@@ -1073,35 +1067,23 @@ private struct ImmersiveCarouselCard: View {
     var body: some View {
         VStack(spacing: 9) {
             ZStack {
-                // Soft tint bloom behind the selected organ render.
+                // Soft tint bloom behind the icon.
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .fill(
                         RadialGradient(
-                            colors: [organ.tint.opacity(isSelected ? 0.40 : 0.0), .clear],
+                            colors: [organ.tint.opacity(isSelected ? 0.45 : 0.12), .clear],
                             center: .center, startRadius: 4, endRadius: 90
                         )
                     )
 
-                Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView().tint(.white.opacity(0.9))
-                    case .success(let model):
-                        model
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .scaleEffect(isSelected ? 1.08 : 0.9)
-                            .padding(12)
-                    case .failure:
-                        Image(systemName: organ.symbolName)
-                            .font(.system(size: isSelected ? 32 : 26, weight: .bold))
-                            .foregroundStyle(.white.opacity(0.8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
+                // Clean contained icon — 2D so it never overflows the card (unlike a 3D render).
+                Image(systemName: organ.symbolName)
+                    .font(.system(size: isSelected ? 50 : 44, weight: .semibold))
+                    .foregroundStyle(isSelected ? organ.tint : .white.opacity(0.85))
+                    .shadow(color: isSelected ? organ.tint.opacity(0.5) : .clear, radius: 10)
             }
             .frame(width: 168, height: 130)
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .fill(.ultraThinMaterial)
