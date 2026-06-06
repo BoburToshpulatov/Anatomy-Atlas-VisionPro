@@ -121,6 +121,11 @@ struct ImmersiveView: View {
                 content.add(heroEntity)
             }
 
+            if let highlightEntity = attachments.entity(for: "structure-highlight") {
+                highlightEntity.position = structureHighlightPosition()
+                content.add(highlightEntity)
+            }
+
             // Spatial audio emitter co-located with the organ.
             audio.attach(to: content, at: heartPosition)
             audio.play(organID: selectedOrgan.id)
@@ -158,6 +163,7 @@ struct ImmersiveView: View {
             attachments.entity(for: "top-bar")?.position = ImmersiveLayoutConfig.topBarPosition
             attachments.entity(for: "ambient-aura")?.position = heartPosition + SIMD3<Float>(0.0, 0.02, -0.10)
             attachments.entity(for: "hero-stage")?.position = heartPosition
+            attachments.entity(for: "structure-highlight")?.position = structureHighlightPosition()
 
             for index in 0..<maxAnnotationSlots {
                 guard let note = selectedOrgan.atlasNotes[safe: index] else { continue }
@@ -214,6 +220,15 @@ struct ImmersiveView: View {
                 // label, panel and carousel attachments. Disabling hit testing on this
                 // large frame stops it from covering the carousel / panel tap areas.
                 .allowsHitTesting(false)
+            }
+
+            Attachment(id: "structure-highlight") {
+                StructureHighlightSpot(
+                    tint: selectedOrgan.tint,
+                    isVisible: labelsVisible && appModel.selectedAnnotationID != nil
+                )
+                .frame(width: 240, height: 240)
+                .allowsHitTesting(false)   // pure highlight — never intercept taps
             }
 
             makeAnnotationAttachment(index: 0)
@@ -522,6 +537,18 @@ struct ImmersiveView: View {
         let xOffset = side == .left ? -Float(viewerLayout.labelLeftX) : Float(viewerLayout.labelRightX)
         let zLift: Float = note.id == appModel.selectedAnnotationID ? ImmersiveLayoutConfig.labelSelectedLift : (appModel.selectedAnnotationID == nil ? ImmersiveLayoutConfig.labelIdleLift : ImmersiveLayoutConfig.labelDimmedLift)
         return SIMD3<Float>(labelsPosition.x + xOffset, laneY(for: note, side: side), labelsPosition.z + zLift)
+    }
+
+    /// Position of the on-organ highlight glow for the currently selected structure.
+    /// Sits just in front of the organ surface at the structure's anatomy point.
+    private func structureHighlightPosition() -> SIMD3<Float> {
+        guard let id = appModel.selectedAnnotationID,
+              let note = selectedOrgan.atlasNotes.first(where: { $0.id == id }) else {
+            return heartPosition
+        }
+        var p = anchorWorldPosition(for: note)
+        p.z += 0.055   // float just off the organ surface toward the viewer
+        return p
     }
 
     /// Anchor dot sits on the actual structure on the organ, so the two-segment leader
@@ -975,6 +1002,51 @@ private struct SpatialConnectorAttachment: View {
         .opacity(isVisible ? 1 : 0.001)
         .animation(.easeInOut(duration: 0.3), value: isSelected)
         .allowsHitTesting(false)
+    }
+}
+
+/// Soft tinted glow that lands on the organ at the selected structure's anatomy point,
+/// so that region appears to "light up" when its label is tapped. (The bundled USDZ has
+/// no separable sub-meshes, so this region glow is the faithful stand-in for recolouring
+/// an isolated part.)
+private struct StructureHighlightSpot: View {
+    let tint: Color
+    let isVisible: Bool
+
+    var body: some View {
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            let breathe = 1.0 + sin(t * 2.2) * 0.06
+            ZStack {
+                // Broad soft bloom over the region.
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [tint.opacity(0.55), tint.opacity(0.22), .clear],
+                            center: .center, startRadius: 2, endRadius: 120
+                        )
+                    )
+                    .blur(radius: 18)
+                // Brighter core so the exact structure point reads clearly.
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.white.opacity(0.7), tint.opacity(0.6), .clear],
+                            center: .center, startRadius: 1, endRadius: 46
+                        )
+                    )
+                    .frame(width: 92, height: 92)
+                    .blur(radius: 6)
+                // Crisp accent ring framing the region.
+                Circle()
+                    .strokeBorder(tint.opacity(0.85), lineWidth: 2.5)
+                    .frame(width: 96, height: 96)
+                    .blur(radius: 0.5)
+            }
+            .scaleEffect(breathe)
+        }
+        .opacity(isVisible ? 1 : 0.001)
+        .animation(.easeInOut(duration: 0.32), value: isVisible)
     }
 }
 
