@@ -522,7 +522,10 @@ struct ImmersiveView: View {
         let side = viewerLayout.placement(for: note).side
         let xOffset = side == .left ? -Float(viewerLayout.labelLeftX) : Float(viewerLayout.labelRightX)
         let zLift: Float = note.id == appModel.selectedAnnotationID ? ImmersiveLayoutConfig.labelSelectedLift : (appModel.selectedAnnotationID == nil ? ImmersiveLayoutConfig.labelIdleLift : ImmersiveLayoutConfig.labelDimmedLift)
-        return SIMD3<Float>(labelsPosition.x + xOffset, laneY(for: note, side: side), labelsPosition.z + zLift)
+        // Sit each label at the same height as its anatomy dot so the leader line runs
+        // straight across (text level with the dot).
+        let y = anchorWorldPosition(for: note).y
+        return SIMD3<Float>(labelsPosition.x + xOffset, y, labelsPosition.z + zLift)
     }
 
     /// Anchor dot sits on the actual structure on the organ, so the two-segment leader
