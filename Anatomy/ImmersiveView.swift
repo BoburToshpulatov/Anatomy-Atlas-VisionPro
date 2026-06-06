@@ -1045,36 +1045,34 @@ private struct ImmersiveCarousel: View {
     let onNavigateRight: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 20) {
-                ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
+        HStack(spacing: 14) {
+            ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
 
-                HStack(spacing: 18) {
-                    ForEach(organs) { organ in
-                        ImmersiveCarouselCard(
-                            organ: organ,
-                            isSelected: organ.id == selectedOrganID
-                        )
-                        .onTapGesture {
-                            onSelect(organ.id)
-                        }
-                    }
-                }
-
-                ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
-            }
-
-            // Page indicator dots
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 ForEach(organs) { organ in
-                    Circle()
-                        .fill(.white.opacity(organ.id == selectedOrganID ? 0.92 : 0.32))
-                        .frame(
-                            width: organ.id == selectedOrganID ? 8 : 6,
-                            height: organ.id == selectedOrganID ? 8 : 6
-                        )
+                    ImmersiveCarouselCard(
+                        organ: organ,
+                        isSelected: organ.id == selectedOrganID
+                    )
+                    .onTapGesture { onSelect(organ.id) }
                 }
             }
+            .padding(10)
+            // Unified glassy dock holding the organ cards.
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                            .fill(Color.black.opacity(0.35))
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.8)
+            )
+
+            ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
         }
         .opacity(isVisible ? 1 : 0)
         .frame(maxWidth: .infinity)
@@ -1087,50 +1085,70 @@ private struct ImmersiveCarouselCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(spacing: 8) {
-            Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView().tint(.white.opacity(0.9))
-                case .success(let model):
-                    model
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .scaleEffect(isSelected ? 1.05 : 0.86)
-                        .padding(12)
-                case .failure:
-                    Image(systemName: organ.symbolName)
-                        .font(.system(size: isSelected ? 32 : 26, weight: .bold))
-                        .foregroundStyle(.white.opacity(0.8))
-                @unknown default:
-                    EmptyView()
+        VStack(spacing: 9) {
+            ZStack {
+                // Soft tint bloom behind the selected organ render.
+                RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                    .fill(
+                        RadialGradient(
+                            colors: [organ.tint.opacity(isSelected ? 0.40 : 0.0), .clear],
+                            center: .center, startRadius: 4, endRadius: 90
+                        )
+                    )
+
+                Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView().tint(.white.opacity(0.9))
+                    case .success(let model):
+                        model
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(isSelected ? 1.08 : 0.9)
+                            .padding(12)
+                    case .failure:
+                        Image(systemName: organ.symbolName)
+                            .font(.system(size: isSelected ? 32 : 26, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.8))
+                    @unknown default:
+                        EmptyView()
+                    }
                 }
             }
-            .frame(width: 132, height: 100)
-            // Flat tile — opaque dark fill so the room never shows through, single
-            // border for selection, NO shadow (shadows read as misaligned layers
-            // from a top viewing angle).
+            .frame(width: 124, height: 96)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                    .fill(isSelected ? organ.tint.opacity(0.22) : Color.black.opacity(0.55))
+                    .fill(Color.black.opacity(isSelected ? 0.30 : 0.45))
             )
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                    .strokeBorder(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.12), lineWidth: isSelected ? 2.5 : 1)
+                    .strokeBorder(
+                        isSelected ? organ.tint.opacity(0.85) : .white.opacity(0.10),
+                        lineWidth: isSelected ? 1.6 : 0.8
+                    )
             }
+            .shadow(color: isSelected ? organ.tint.opacity(0.35) : .clear, radius: 10, y: 2)
 
-            VStack(spacing: 3) {
+            VStack(spacing: 2) {
                 Text(organ.title)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.white.opacity(isSelected ? 0.99 : 0.82))
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.78))
 
                 Text(organ.tagline)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(isSelected ? organ.tint.opacity(0.9) : .white.opacity(0.52))
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.45))
             }
+
+            // Slim accent underline for the active organ — premium, restrained selection cue.
+            Capsule()
+                .fill(organ.tint)
+                .frame(width: isSelected ? 26 : 0, height: 3)
+                .opacity(isSelected ? 1 : 0)
         }
-        .frame(width: 172)
-        .scaleEffect(isSelected ? 1.04 : 1.0)
+        .frame(width: 150)
+        .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .scaleEffect(isSelected ? 1.03 : 1.0)
         .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
     }
 }
@@ -1155,19 +1173,21 @@ private struct ImmersiveNavButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: direction.symbolName)
-                .font(.body.weight(.bold))
-                .foregroundStyle(.white.opacity(isEnabled ? 0.92 : 0.30))
-                .frame(width: 48, height: 48)
-                .background(.black.opacity(isEnabled ? 0.12 : 0.04), in: Circle())
-                .glassBackgroundEffect(in: Circle())
-                .overlay {
+                .font(.callout.weight(.bold))
+                .foregroundStyle(.white.opacity(isEnabled ? 0.9 : 0.3))
+                .frame(width: 44, height: 44)
+                .background(
                     Circle()
-                        .strokeBorder(.white.opacity(isEnabled ? 0.10 : 0.04), lineWidth: 0.8)
+                        .fill(.ultraThinMaterial)
+                        .overlay(Circle().fill(Color.black.opacity(0.3)))
+                )
+                .overlay {
+                    Circle().strokeBorder(.white.opacity(isEnabled ? 0.14 : 0.05), lineWidth: 0.8)
                 }
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.3)
+        .opacity(isEnabled ? 1 : 0.35)
     }
 }
 
