@@ -970,7 +970,8 @@ private struct SpatialConnectorAttachment: View {
             path.addLine(to: CGPoint(x: anchorX, y: anchorY))  // vertical drop into the dot
 
             let baseOpacity: Double = isSelected ? 1.0 : 0.7
-            let lineColor: Color = isSelected ? tint : .white
+            // Neutral white leader lines — no coloured (blue/red) highlight on selection.
+            let lineColor: Color = .white
 
             context.stroke(
                 path,
@@ -979,7 +980,7 @@ private struct SpatialConnectorAttachment: View {
             )
         }
         .frame(width: width, height: height)
-        .shadow(color: isSelected ? tint.opacity(0.8) : .clear, radius: isSelected ? 5 : 0)
+        .shadow(color: isSelected ? .white.opacity(0.5) : .clear, radius: isSelected ? 4 : 0)
         .opacity(isVisible ? 1 : 0.001)
         .animation(.easeInOut(duration: 0.3), value: isSelected)
         .allowsHitTesting(false)
@@ -1000,16 +1001,16 @@ private struct SpatialAnchorDot: View {
             ZStack {
                 if isSelected {
                     Circle()
-                        .fill(tint.opacity(0.4))
-                        .frame(width: 34, height: 34)
+                        .fill(.white.opacity(0.35))
+                        .frame(width: 30, height: 30)
                         .blur(radius: 8)
                         .scaleEffect(pulse)
                 }
                 Circle()
-                    .fill(isSelected ? tint : .white.opacity(0.80))
-                    .frame(width: isSelected ? 13 : 7, height: isSelected ? 13 : 7)
+                    .fill(.white.opacity(isSelected ? 1.0 : 0.80))
+                    .frame(width: isSelected ? 12 : 7, height: isSelected ? 12 : 7)
                     .overlay { if isSelected { Circle().strokeBorder(.white.opacity(0.7), lineWidth: 1.5) } }
-                    .shadow(color: isSelected ? tint : .clear, radius: isSelected ? 8 : 0)
+                    .shadow(color: isSelected ? .white.opacity(0.6) : .clear, radius: isSelected ? 6 : 0)
             }
         }
         .opacity(isVisible ? 1 : 0.001)
@@ -2081,18 +2082,19 @@ private struct ImmersiveAuraField: View {
                 .frame(width: 920, height: 920)
                 .blur(radius: 24)
 
-            // Primary tint bloom — warm coloured halo behind the organ
+            // Primary tint bloom — a faint coloured halo behind the organ (kept subtle so
+            // the model never looks washed in colour).
             Circle()
-                .fill(tint.opacity(0.28))
+                .fill(tint.opacity(0.10))
                 .frame(width: 520, height: 520)
-                .blur(radius: 90)
+                .blur(radius: 100)
                 .offset(x: -16, y: -12)
 
             // Secondary soft tint spread
             Circle()
-                .fill(tint.opacity(0.12))
+                .fill(tint.opacity(0.05))
                 .frame(width: 680, height: 680)
-                .blur(radius: 120)
+                .blur(radius: 130)
                 .offset(x: 24, y: 18)
 
             // Subtle white specular highlight at top

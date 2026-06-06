@@ -75,7 +75,9 @@ struct OrganRealityView: View {
                 let focusPitch = organ.basePitch + viewerLayout.heroPitchOffset
                 let focusScale: CGFloat = 1                       // no zoom on focus
                 let focusOffset = viewerLayout.heroVisualOffset   // no positional shift on focus
-                let highlightBloom = selectedAnnotation != nil
+                // Selecting a label no longer pumps up a big coloured bloom on the model —
+                // the highlight lives on the label itself, the organ glow stays calm.
+                let highlightBloom = false
 
                 ZStack {
                     Ellipse()
@@ -106,8 +108,7 @@ struct OrganRealityView: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    organ.tint.opacity(highlightBloom ? 0.22 : 0.12),
-                                    Color.cyan.opacity(highlightBloom ? 0.16 : 0.08),
+                                    organ.tint.opacity(0.10),
                                     .clear
                                 ],
                                 center: .center,
@@ -158,20 +159,19 @@ struct OrganRealityView: View {
                                     )
                                     .opacity(isHeroVisible ? 1 : 0)
                                     .transition(.opacity.combined(with: .scale(scale: 0.94)))
-                                    .shadow(color: organ.tint.opacity(0.40), radius: 54, y: 18)
+                                    .shadow(color: .black.opacity(0.45), radius: 44, y: 18)
                                     .overlay {
                                         Circle()
                                             .fill(
                                                 RadialGradient(
                                                     colors: [
-                                                        .white.opacity(highlightBloom ? 0.16 : 0.10),
-                                                        organ.tint.opacity(highlightBloom ? 0.22 : 0.14),
-                                                        Color.cyan.opacity(highlightBloom ? 0.10 : 0.04),
+                                                        .white.opacity(0.08),
+                                                        organ.tint.opacity(0.10),
                                                         .clear
                                                     ],
                                                     center: .topTrailing,
                                                     startRadius: 10,
-                                                    endRadius: geometry.size.width * (highlightBloom ? 0.29 : 0.24)
+                                                    endRadius: geometry.size.width * 0.24
                                                 )
                                             )
                                             .blur(radius: highlightBloom ? 28 : 20)
@@ -344,18 +344,18 @@ struct AnnotationBubble: View {
             )
             .overlay {
                 Capsule()
-                    .strokeBorder(isSelected ? tint.opacity(0.9) : Color.white.opacity(0.18),
+                    .strokeBorder(isSelected ? .white.opacity(0.85) : Color.white.opacity(0.18),
                                   lineWidth: isSelected ? 1.6 : 1.0)
             }
-            // Soft tinted glow only — a quiet premium ring, not a coloured pill.
+            // Soft neutral glow only — a quiet premium ring, no coloured (blue/red) bloom.
             .background(
                 Capsule()
-                    .strokeBorder(tint, lineWidth: 3)
+                    .strokeBorder(.white, lineWidth: 3)
                     .blur(radius: 8)
-                    .opacity(isSelected ? 0.55 : 0)
+                    .opacity(isSelected ? 0.4 : 0)
                     .scaleEffect(1.08)
             )
-            .shadow(color: isSelected ? tint.opacity(0.45) : .black.opacity(0.22), radius: isSelected ? 14 : 8, y: 4)
+            .shadow(color: .black.opacity(isSelected ? 0.4 : 0.22), radius: isSelected ? 14 : 8, y: 4)
 
             // Short description below the pill (textbook-callout style, always shown).
             Text(note.subtitle)
