@@ -68,9 +68,15 @@ struct ImmersiveView: View {
     private var panelHeightForMode: CGFloat {
         learnActive ? 1320 : ImmersiveLayoutConfig.panelHeight
     }
-    // Faces the viewer straight on in the centered Learn theater; angled inward otherwise.
-    private var panelOrientation: simd_quatf {
-        simd_quatf(angle: learnActive ? 0 : -.pi / 18, axis: [0, 1, 0])
+    // In the Learn theater the panel billboards to face the viewer squarely; otherwise it
+    // sits at a fixed slight inward angle.
+    private func applyPanelFacing(_ entity: Entity) {
+        if learnActive {
+            entity.components.set(BillboardComponent())
+        } else {
+            entity.components.remove(BillboardComponent.self)
+            entity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
+        }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     // Lift the model (+rings), labels, and carousel up together; the panel stays put.
@@ -156,7 +162,7 @@ struct ImmersiveView: View {
 
             if let panelEntity = attachments.entity(for: "panel") {
                 panelEntity.position = panelPosition
-                panelEntity.orientation = panelOrientation
+                applyPanelFacing(panelEntity)
                 content.add(panelEntity)
             }
 
@@ -178,7 +184,7 @@ struct ImmersiveView: View {
             }
 
             attachments.entity(for: "panel")?.position = panelPosition
-            attachments.entity(for: "panel")?.orientation = panelOrientation
+            if let panelEntity = attachments.entity(for: "panel") { applyPanelFacing(panelEntity) }
             attachments.entity(for: "carousel-stack")?.position = carouselPosition
             audio.move(to: heartPosition)
             audio.play(organID: selectedOrgan.id)
