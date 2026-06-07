@@ -43,6 +43,10 @@ struct ImmersiveView: View {
     @State private var isSwitchingOrgan = false
     @State private var viewerAngle: AnatomyOrgan.ViewerAngle = .front
     @State private var audio = SpatialAudioController()
+    // Roots for the Learn theater: head anchor keeps the reader locked in front of the
+    // viewer; world root holds it in room space for the other modes.
+    @State private var headAnchor = AnchorEntity(.head)
+    @State private var worldRoot = Entity()
 
     private let carouselOrder = ["heart", "brain", "lungs", "kidneys"]
     private let maxAnnotationSlots = 8
@@ -68,10 +72,23 @@ struct ImmersiveView: View {
     private var panelHeightForMode: CGFloat {
         learnActive ? 1320 : ImmersiveLayoutConfig.panelHeight
     }
-    // Flat, straight-on in the Learn theater; a fixed slight inward angle otherwise.
-    private func applyPanelFacing(_ entity: Entity) {
-        entity.components.remove(BillboardComponent.self)
-        entity.orientation = simd_quatf(angle: learnActive ? 0 : -.pi / 18, axis: [0, 1, 0])
+    /// Places the panel: head-locked and squarely in front in the Learn theater, or
+    /// world-fixed (slightly angled inward) for the other modes.
+    private func positionPanel(_ entity: Entity) {
+        if learnActive {
+            if entity.parent !== headAnchor {
+                entity.setParent(headAnchor, preservingWorldTransform: false)
+            }
+            // Directly ahead, a touch below eye line, facing the viewer.
+            entity.position = SIMD3<Float>(0, -0.05, -1.5)
+            entity.orientation = simd_quatf(angle: 0, axis: [0, 1, 0])
+        } else {
+            if entity.parent !== worldRoot {
+                entity.setParent(worldRoot, preservingWorldTransform: false)
+            }
+            entity.position = panelPosition
+            entity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
+        }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     // Lift the model (+rings), labels, and carousel up together; the panel stays put.
@@ -155,10 +172,12 @@ struct ImmersiveView: View {
                 }
             }
 
+            // Roots for panel parenting (head-locked theater vs world-fixed).
+            content.add(worldRoot)
+            content.add(headAnchor)
+
             if let panelEntity = attachments.entity(for: "panel") {
-                panelEntity.position = panelPosition
-                applyPanelFacing(panelEntity)
-                content.add(panelEntity)
+                positionPanel(panelEntity)
             }
 
             if let carouselEntity = attachments.entity(for: "carousel-stack") {
@@ -178,8 +197,7 @@ struct ImmersiveView: View {
                 attachments.entity(for: "annotation-slot-\(index)")?.position = spatialLabelPosition(for: note)
             }
 
-            attachments.entity(for: "panel")?.position = panelPosition
-            if let panelEntity = attachments.entity(for: "panel") { applyPanelFacing(panelEntity) }
+            if let panelEntity = attachments.entity(for: "panel") { positionPanel(panelEntity) }
             attachments.entity(for: "carousel-stack")?.position = carouselPosition
             audio.move(to: heartPosition)
             audio.play(organID: selectedOrgan.id)
@@ -292,11 +310,10 @@ struct ImmersiveView: View {
                 )
                 .frame(width: panelWidthForMode, height: panelHeightForMode)
                 .opacity(panelVisible ? 1 : 0.001)
-                // Theater Learn mode: glide the panel to dead-centre and well forward,
-                // leaving everything else behind it.
-                .offset(x: learnActive ? CGFloat(-panelPosition.x * 1360) : 0)
-                .offset(z: learnActive ? 460 : 0)
-                .animation(.spring(response: 0.62, dampingFraction: 0.82), value: appModel.selectedStudyMode)
+                // Position/facing handled by positionPanel (head-locked in Learn). A gentle
+                // scale gives the "open" feel without fighting the head anchor.
+                .scaleEffect(learnActive ? 1.0 : 1.0)
+                .animation(.spring(response: 0.5, dampingFraction: 0.84), value: appModel.selectedStudyMode)
             }
 
             Attachment(id: "carousel-stack") {
