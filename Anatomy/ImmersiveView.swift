@@ -16,8 +16,8 @@ private enum ImmersiveLayoutConfig {
     static let heroFrame = CGSize(width: 1440, height: 1100)
     static let panelHeight: CGFloat = 1040
     static let instructionOpacityWhenHidden = 0.001
-    static let carouselStackWidth: CGFloat = 880
-    static let carouselFrameHeight: CGFloat = 280
+    static let carouselStackWidth: CGFloat = 1120
+    static let carouselFrameHeight: CGFloat = 300
     static let bottomStackSpacing: CGFloat = 22
     static let labelVerticalSpread: Float = 0.58
     static let labelSelectedLift: Float = 0.04
@@ -1086,8 +1086,8 @@ private struct ImmersiveCarouselCard: View {
     let organ: AnatomyOrgan
     let isSelected: Bool
 
-    private var cardWidth: CGFloat { isSelected ? 188 : 116 }
-    private var cardHeight: CGFloat { 146 }
+    private var cardWidth: CGFloat { isSelected ? 224 : 156 }
+    private var cardHeight: CGFloat { 172 }
 
     var body: some View {
         VStack(spacing: 9) {
@@ -1100,8 +1100,8 @@ private struct ImmersiveCarouselCard: View {
                             .fill(
                                 LinearGradient(
                                     colors: isSelected
-                                        ? [organ.tint.opacity(0.30), Color.black.opacity(0.30)]
-                                        : [Color.black.opacity(0.42), Color.black.opacity(0.5)],
+                                        ? [organ.tint.opacity(0.28), Color.black.opacity(0.22)]
+                                        : [Color.black.opacity(0.26), Color.black.opacity(0.36)],
                                     startPoint: .top, endPoint: .bottom
                                 )
                             )
@@ -1109,14 +1109,14 @@ private struct ImmersiveCarouselCard: View {
 
                 // Tint bloom behind the artwork (stronger when featured).
                 Circle()
-                    .fill(organ.tint.opacity(isSelected ? 0.40 : 0.10))
-                    .frame(width: isSelected ? 110 : 64, height: isSelected ? 110 : 64)
-                    .blur(radius: 28)
+                    .fill(organ.tint.opacity(isSelected ? 0.42 : 0.16))
+                    .frame(width: isSelected ? 130 : 86, height: isSelected ? 130 : 86)
+                    .blur(radius: 30)
 
                 organArtwork
-                    .frame(width: isSelected ? 150 : 92, height: isSelected ? 126 : 92)
-                    .saturation(isSelected ? 1.0 : 0.7)
-                    .opacity(isSelected ? 1.0 : 0.82)
+                    .frame(width: isSelected ? 182 : 128, height: isSelected ? 150 : 116)
+                    .saturation(isSelected ? 1.0 : 0.92)
+                    .opacity(isSelected ? 1.0 : 0.95)
                     .shadow(color: .black.opacity(0.32), radius: 5, y: 3)
             }
             .frame(width: cardWidth, height: cardHeight)
@@ -1144,8 +1144,8 @@ private struct ImmersiveCarouselCard: View {
                 Capsule().fill(organ.tint).frame(width: 28, height: 3)
             } else {
                 Text(organ.title)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.72))
                     .padding(.top, 1)
             }
         }
