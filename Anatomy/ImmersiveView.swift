@@ -1077,25 +1077,32 @@ private struct ImmersiveCarouselCard: View {
                             .fill(Color.black.opacity(isSelected ? 0.34 : 0.46))
                     )
 
-                // Circular medallion — calm glass, with the icon carrying the organ's colour.
-                ZStack {
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .overlay(Circle().fill(Color.black.opacity(0.22)))
-                        .overlay(
-                            Circle().strokeBorder(
-                                isSelected ? organ.tint.opacity(0.55) : .white.opacity(0.16),
-                                lineWidth: 1.0
-                            )
-                        )
-                        .frame(width: 78, height: 78)
+                // Soft tint bloom behind the organ render.
+                Circle()
+                    .fill(organ.tint.opacity(isSelected ? 0.35 : 0.14))
+                    .frame(width: 72, height: 72)
+                    .blur(radius: 24)
 
-                    Image(systemName: organ.symbolName)
-                        .font(.system(size: isSelected ? 34 : 32, weight: .semibold))
-                        .foregroundStyle(
-                            organ.tint.opacity(isSelected ? 1.0 : 0.82)
-                        )
+                // Realistic organ — the actual 3D model rendered as the thumbnail.
+                Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView().tint(.white.opacity(0.85))
+                    case .success(let model):
+                        model
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .scaleEffect(isSelected ? 0.96 : 0.84)
+                    case .failure:
+                        Image(systemName: organ.symbolName)
+                            .font(.system(size: 32, weight: .semibold))
+                            .foregroundStyle(organ.tint.opacity(0.85))
+                    @unknown default:
+                        EmptyView()
+                    }
                 }
+                .frame(width: 120, height: 100)
+                .padding(.bottom, 4)
             }
             .frame(width: 168, height: 130)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
