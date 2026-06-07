@@ -846,22 +846,33 @@ private struct ImmersiveHeroStage: View {
                     .frame(width: preset.floorGlowWidth * 0.50, height: preset.floorGlowHeight * 0.36)
                     .blur(radius: 12)
 
-                // Crisp, evenly concentric rings — clean and centered.
-                ForEach(Array([1.04, 0.86, 0.66, 0.46].enumerated()), id: \.offset) { i, scale in
+                // Crisp, evenly concentric rings — clean and centered, graded for depth.
+                ForEach(Array([1.24, 1.04, 0.86, 0.66, 0.46].enumerated()), id: \.offset) { i, scale in
                     Ellipse()
                         .stroke(
-                            (i == 2 ? organ.tint : Color.white).opacity([0.08, 0.16, 0.40, 0.22][i]),
-                            lineWidth: i == 2 ? 1.6 : 1.0
+                            LinearGradient(
+                                colors: [
+                                    (i == 3 ? organ.tint : Color.white).opacity([0.05, 0.10, 0.18, 0.45, 0.24][i]),
+                                    (i == 3 ? organ.tint : Color.white).opacity([0.02, 0.05, 0.09, 0.22, 0.12][i])
+                                ],
+                                startPoint: .top, endPoint: .bottom
+                            ),
+                            lineWidth: i == 3 ? 1.8 : 1.0
                         )
                         .frame(width: preset.floorGlowWidth * scale, height: preset.floorGlowHeight * scale)
                 }
 
-                // Defined accent rim — even all the way around (no side bias).
+                // Defined accent rim — even all the way around (no side bias), with a glow.
                 Ellipse()
-                    .strokeBorder(organ.tint.opacity(0.7), lineWidth: 1.6)
+                    .strokeBorder(
+                        LinearGradient(colors: [organ.tint, organ.tint.opacity(0.55)],
+                                       startPoint: .top, endPoint: .bottom),
+                        lineWidth: 2.0
+                    )
                     .frame(width: preset.floorGlowWidth * 0.66, height: preset.floorGlowHeight * 0.46)
-                    .shadow(color: organ.tint.opacity(0.5), radius: 6)
+                    .shadow(color: organ.tint.opacity(0.6), radius: 8)
             }
+            .scaleEffect(1.2)   // a bit bigger, premium presence
             .offset(y: preset.stageHeight * pedestalFraction)
             .offset(z: -44)
             .opacity(isGlowVisible ? 1 : 0)
