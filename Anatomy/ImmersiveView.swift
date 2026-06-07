@@ -1077,32 +1077,20 @@ private struct ImmersiveCarouselCard: View {
                             .fill(Color.black.opacity(isSelected ? 0.34 : 0.46))
                     )
 
-                // Soft tint bloom behind the organ render.
+                // Soft tint bloom behind the organ image.
                 Circle()
                     .fill(organ.tint.opacity(isSelected ? 0.35 : 0.14))
-                    .frame(width: 72, height: 72)
-                    .blur(radius: 24)
+                    .frame(width: 80, height: 80)
+                    .blur(radius: 26)
 
-                // Realistic organ — the actual 3D model rendered as the thumbnail.
-                Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView().tint(.white.opacity(0.85))
-                    case .success(let model):
-                        model
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .scaleEffect(isSelected ? 0.96 : 0.84)
-                    case .failure:
-                        Image(systemName: organ.symbolName)
-                            .font(.system(size: 32, weight: .semibold))
-                            .foregroundStyle(organ.tint.opacity(0.85))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-                .frame(width: 120, height: 100)
-                .padding(.bottom, 4)
+                // Realistic organ artwork supplied in the asset catalog.
+                Image("carousel_\(organ.id)")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 132, height: 116)
+                    .scaleEffect(isSelected ? 1.04 : 0.94)
+                    .saturation(isSelected ? 1.0 : 0.85)
+                    .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
             }
             .frame(width: 168, height: 130)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
