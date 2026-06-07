@@ -500,17 +500,17 @@ extension AnatomyOrgan {
             modelName: "Human_Lungs.usdz",
             tint: Color(red: 0.46, green: 0.71, blue: 0.96),
             heroScale: 0.98,
-            heroOffset: CGSize(width: 0, height: -4),
+            heroOffset: CGSize(width: 0, height: 6),
             baseYaw: -4,
             basePitch: -6,
             glowScale: 1.08,
             pulseStyle: .neural,
             immersivePreset: ImmersivePreset(
-                heroX: -26, heroY: 18, heroZ: 168, stageWidth: 1600, stageHeight: 1040,
+                heroX: 0, heroY: 16, heroZ: 210, stageWidth: 2060, stageHeight: 1460,
                 panelX: 72, panelY: 16, panelZ: 220, panelWidth: 420,
                 carouselY: 82, carouselZ: 112, carouselScale: 1.0,
                 labelLeftX: 0.06, labelRightX: 0.88, labelWidth: 232,
-                labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 470, floorGlowHeight: 120
+                labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 620, floorGlowHeight: 156
             ),
             atlasNotes: [
                 OrganAnnotation(id: "lungs-trachea", title: "Trachea", subtitle: "Main airway",
@@ -599,11 +599,11 @@ extension AnatomyOrgan {
             glowScale: 1.04,
             pulseStyle: .neural,
             immersivePreset: ImmersivePreset(
-                heroX: -18, heroY: 16, heroZ: 166, stageWidth: 1600, stageHeight: 1040,
+                heroX: 0, heroY: 16, heroZ: 210, stageWidth: 2060, stageHeight: 1460,
                 panelX: 74, panelY: 18, panelZ: 220, panelWidth: 420,
                 carouselY: 82, carouselZ: 112, carouselScale: 1.0,
                 labelLeftX: 0.06, labelRightX: 0.88, labelWidth: 232,
-                labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 450, floorGlowHeight: 116
+                labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 620, floorGlowHeight: 156
             ),
             atlasNotes: [
                 OrganAnnotation(id: "kidney-cortex", title: "Renal Cortex", subtitle: "Outer filter layer",
