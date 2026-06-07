@@ -10,7 +10,7 @@ import RealityKit
 import RealityKitContent
 
 private enum ImmersiveLayoutConfig {
-    static let topBarPosition = SIMD3<Float>(0.0, 1.92, -1.30)
+    static let topBarPosition = SIMD3<Float>(0.0, 2.00, -1.30)
     static let topBarWidth: CGFloat = 480
     static let auraSize: CGFloat = 1180
     static let heroFrame = CGSize(width: 1440, height: 1100)
@@ -66,10 +66,12 @@ struct ImmersiveView: View {
         }
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
-    private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition }
-    private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition }
+    // Lift the model (+rings), labels, and carousel up together; the panel stays put.
+    private let sceneLift = SIMD3<Float>(0, 0.08, 0)
+    private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition + sceneLift }
+    private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition + sceneLift }
     private var panelPosition: SIMD3<Float> { viewerLayout.panelPosition }
-    private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition }
+    private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition + sceneLift }
     private var visibleAnnotationIDs: Set<String> {
         guard appModel.selectedStudyMode == .labels else { return [] }
         // All curated labels stay visible; selecting one highlights it and softly dims
