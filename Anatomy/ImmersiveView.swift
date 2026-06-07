@@ -68,15 +68,10 @@ struct ImmersiveView: View {
     private var panelHeightForMode: CGFloat {
         learnActive ? 1320 : ImmersiveLayoutConfig.panelHeight
     }
-    // In the Learn theater the panel billboards to face the viewer squarely; otherwise it
-    // sits at a fixed slight inward angle.
+    // Flat, straight-on in the Learn theater; a fixed slight inward angle otherwise.
     private func applyPanelFacing(_ entity: Entity) {
-        if learnActive {
-            entity.components.set(BillboardComponent())
-        } else {
-            entity.components.remove(BillboardComponent.self)
-            entity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
-        }
+        entity.components.remove(BillboardComponent.self)
+        entity.orientation = simd_quatf(angle: learnActive ? 0 : -.pi / 18, axis: [0, 1, 0])
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     // Lift the model (+rings), labels, and carousel up together; the panel stays put.
