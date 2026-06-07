@@ -64,7 +64,24 @@ struct ContentView: View {
 
                     LauncherShell {
                         VStack(spacing: LauncherLayout.contentSpacing) {
-                            VStack(spacing: 8) {
+                            VStack(spacing: 10) {
+                                // Premium eyebrow badge.
+                                HStack(spacing: 7) {
+                                    Image(systemName: "visionpro")
+                                        .font(.caption.weight(.bold))
+                                    Text("ROOM-SCALE STUDY")
+                                        .font(.caption.weight(.bold))
+                                        .tracking(1.6)
+                                }
+                                .foregroundStyle(.white.opacity(0.82))
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                                .background(
+                                    Capsule().fill(.ultraThinMaterial)
+                                        .overlay(Capsule().fill(Color.white.opacity(0.06)))
+                                )
+                                .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 0.8))
+
                                 Text("Immersive Anatomy")
                                     .font(.system(size: 44, weight: .bold, design: .rounded))
                                     .foregroundStyle(.white)
@@ -256,24 +273,22 @@ private struct LauncherOrganCard: View {
     }
 
     private var organPreview: some View {
-        Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-            switch phase {
-            case .empty:
-                ProgressView().tint(.white)
-            case .success(let model):
-                model
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .scaleEffect(isSelected ? 1.06 : 0.94)
-                    .padding(16)
-            case .failure:
-                Image(systemName: organ.symbolName)
-                    .font(.system(size: 48, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.86))
-            @unknown default:
-                EmptyView()
-            }
+        ZStack {
+            // Soft tint bloom behind the artwork for a premium, lit feel.
+            Circle()
+                .fill(organ.tint.opacity(isSelected ? 0.32 : 0.12))
+                .frame(width: 150, height: 150)
+                .blur(radius: 40)
+
+            Image("carousel_\(organ.id)")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .scaleEffect(isSelected ? 1.04 : 0.92)
+                .saturation(isSelected ? 1.0 : 0.85)
+                .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+                .padding(16)
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.84), value: isSelected)
     }
 }
 
