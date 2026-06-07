@@ -291,10 +291,11 @@ struct ImmersiveView: View {
                 )
                 .frame(width: panelWidthForMode, height: panelHeightForMode)
                 .opacity(panelVisible ? 1 : 0.001)
-                // Theater Learn mode: glide the panel to centre and forward, covering the scene.
+                // Theater Learn mode: glide the panel to dead-centre and well forward,
+                // leaving everything else behind it.
                 .offset(x: learnActive ? CGFloat(-panelPosition.x * 1360) : 0)
-                .offset(z: learnActive ? 340 : 0)
-                .animation(.spring(response: 0.6, dampingFraction: 0.82), value: appModel.selectedStudyMode)
+                .offset(z: learnActive ? 460 : 0)
+                .animation(.spring(response: 0.62, dampingFraction: 0.82), value: appModel.selectedStudyMode)
             }
 
             Attachment(id: "carousel-stack") {
@@ -316,8 +317,10 @@ struct ImmersiveView: View {
                     .frame(height: ImmersiveLayoutConfig.carouselFrameHeight)
                 }
                 .frame(width: ImmersiveLayoutConfig.carouselStackWidth)
-                .opacity(learnActive ? 0.32 : 1.0)
-                .animation(.easeInOut(duration: 0.4), value: learnActive)
+                // Recede fully behind the reader in the Learn theater.
+                .opacity(learnActive ? 0.0 : 1.0)
+                .offset(z: learnActive ? -240 : 0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.82), value: learnActive)
             }
         }
         .animation(.spring(response: 0.62, dampingFraction: 0.86), value: appModel.selectedOrganID)
