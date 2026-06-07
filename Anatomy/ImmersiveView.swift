@@ -1077,20 +1077,24 @@ private struct ImmersiveCarouselCard: View {
                             .fill(Color.black.opacity(isSelected ? 0.34 : 0.46))
                     )
 
-                // Neutral circular medallion holding the icon — calm, not shiny/tinted.
+                // Circular medallion — calm glass, with the icon carrying the organ's colour.
                 ZStack {
                     Circle()
                         .fill(.ultraThinMaterial)
-                        .overlay(Circle().fill(Color.black.opacity(0.2)))
+                        .overlay(Circle().fill(Color.black.opacity(0.22)))
                         .overlay(
-                            Circle().strokeBorder(.white.opacity(isSelected ? 0.3 : 0.16),
-                                                  lineWidth: 1.0)
+                            Circle().strokeBorder(
+                                isSelected ? organ.tint.opacity(0.55) : .white.opacity(0.16),
+                                lineWidth: 1.0
+                            )
                         )
                         .frame(width: 78, height: 78)
 
                     Image(systemName: organ.symbolName)
                         .font(.system(size: isSelected ? 34 : 32, weight: .semibold))
-                        .foregroundStyle(.white.opacity(isSelected ? 0.95 : 0.75))
+                        .foregroundStyle(
+                            organ.tint.opacity(isSelected ? 1.0 : 0.82)
+                        )
                 }
             }
             .frame(width: 168, height: 130)

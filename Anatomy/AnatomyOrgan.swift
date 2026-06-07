@@ -1036,7 +1036,7 @@ extension AnatomyOrgan {
                 labelsPosition: SIMD3<Float>(0.0, 1.54, -1.82),
                 panelPosition: SIMD3<Float>(0.88, 1.56, -1.58),
                 panelWidth: 818,
-                carouselPosition: SIMD3<Float>(0.0, 1.08, -1.14),
+                carouselPosition: SIMD3<Float>(0.0, 1.06, -1.12),
                 heroYawOffset: 0,
                 heroPitchOffset: 0,
                 heroVisualOffset: .zero,
