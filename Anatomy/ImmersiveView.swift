@@ -60,10 +60,17 @@ struct ImmersiveView: View {
     /// Panel width per mode — narrower in Labels so right-side callouts have room.
     private var panelWidthForMode: CGFloat {
         switch appModel.selectedStudyMode {
-        case .learn:  return 980
-        case .labels: return 600   // narrower so right-side callouts have room
+        case .learn:  return 1360   // theater: wide, centered reader
+        case .labels: return 600    // narrower so right-side callouts have room
         default:      return viewerLayout.panelWidth
         }
+    }
+    private var panelHeightForMode: CGFloat {
+        learnActive ? 1200 : ImmersiveLayoutConfig.panelHeight
+    }
+    // Faces the viewer straight on in the centered Learn theater; angled inward otherwise.
+    private var panelOrientation: simd_quatf {
+        simd_quatf(angle: learnActive ? 0 : -.pi / 18, axis: [0, 1, 0])
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     // Lift the model (+rings), labels, and carousel up together; the panel stays put.
@@ -149,7 +156,7 @@ struct ImmersiveView: View {
 
             if let panelEntity = attachments.entity(for: "panel") {
                 panelEntity.position = panelPosition
-                panelEntity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
+                panelEntity.orientation = panelOrientation
                 content.add(panelEntity)
             }
 
@@ -171,6 +178,7 @@ struct ImmersiveView: View {
             }
 
             attachments.entity(for: "panel")?.position = panelPosition
+            attachments.entity(for: "panel")?.orientation = panelOrientation
             attachments.entity(for: "carousel-stack")?.position = carouselPosition
             audio.move(to: heartPosition)
             audio.play(organID: selectedOrgan.id)
@@ -209,11 +217,12 @@ struct ImmersiveView: View {
                     onAnnotationSelected: selectAnnotation
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
-                .scaleEffect((heroVisible ? 0.98 : 0.88) * (learnActive ? 0.82 : 1.0))
-                // Recede the organ in Learn mode so the reader leads.
-                .opacity(learnActive ? 0.34 : 1.0)
-                .blur(radius: learnActive ? 6 : 0)
-                .animation(.easeInOut(duration: 0.4), value: learnActive)
+                .scaleEffect((heroVisible ? 0.98 : 0.88) * (learnActive ? 0.78 : 1.0))
+                // Recede the organ in Learn mode so the reader leads — push it back and fade out.
+                .opacity(learnActive ? 0.12 : 1.0)
+                .blur(radius: learnActive ? 10 : 0)
+                .offset(z: learnActive ? -260 : 0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.82), value: learnActive)
                 // The hero organ is purely visual — all interaction happens through the
                 // label, panel and carousel attachments. Disabling hit testing on this
                 // large frame stops it from covering the carousel / panel tap areas.
@@ -268,11 +277,24 @@ struct ImmersiveView: View {
                         withAnimation(.spring(response: 0.46, dampingFraction: 0.84)) {
                             appModel.setStudyMode(.quiz)
                         }
+                    },
+                    onEnlarge: {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.82)) {
+                            appModel.setStudyMode(.learn)
+                        }
+                    },
+                    onExitLearn: {
+                        withAnimation(.spring(response: 0.6, dampingFraction: 0.82)) {
+                            appModel.setStudyMode(.explore)
+                        }
                     }
                 )
-                .frame(width: panelWidthForMode, height: ImmersiveLayoutConfig.panelHeight)
+                .frame(width: panelWidthForMode, height: panelHeightForMode)
                 .opacity(panelVisible ? 1 : 0.001)
-                .animation(.spring(response: 0.5, dampingFraction: 0.86), value: appModel.selectedStudyMode)
+                // Theater Learn mode: glide the panel to centre and forward, covering the scene.
+                .offset(x: learnActive ? CGFloat(-panelPosition.x * 1360) : 0)
+                .offset(z: learnActive ? 280 : 0)
+                .animation(.spring(response: 0.6, dampingFraction: 0.82), value: appModel.selectedStudyMode)
             }
 
             Attachment(id: "carousel-stack") {
@@ -1235,10 +1257,33 @@ private struct ImmersiveInfoPanel: View {
     let onSubmitQuizAnswer: (Int) -> Void
     let onAdvanceQuiz: () -> Void
     let onStartQuiz: () -> Void
+    var onEnlarge: () -> Void = {}
+    var onExitLearn: () -> Void = {}
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                // Theater back button — clearly visible when reading in Learn mode.
+                if studyMode == .learn {
+                    Button(action: onExitLearn) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.left")
+                                .font(.headline.weight(.bold))
+                            Text("Back")
+                                .font(.headline.weight(.semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 11)
+                        .background(
+                            Capsule().fill(.ultraThinMaterial)
+                                .overlay(Capsule().fill(organ.tint.opacity(0.22)))
+                        )
+                        .overlay(Capsule().strokeBorder(organ.tint.opacity(0.6), lineWidth: 1.2))
+                    }
+                    .buttonStyle(.plain)
+                }
+
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .center) {
                         Text(organ.title)
@@ -1246,6 +1291,19 @@ private struct ImmersiveInfoPanel: View {
                             .foregroundStyle(.white)
 
                         Spacer()
+
+                        // Enlarge → opens the focused Learn theater (hidden while already in Learn).
+                        if studyMode != .learn {
+                            Button(action: onEnlarge) {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                    .font(.title3.weight(.bold))
+                                    .foregroundStyle(.white)
+                                    .padding(11)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .overlay(Circle().strokeBorder(.white.opacity(0.18), lineWidth: 0.8))
+                            }
+                            .buttonStyle(.plain)
+                        }
 
                         Image(systemName: organ.symbolName)
                             .font(.title3.weight(.bold))
