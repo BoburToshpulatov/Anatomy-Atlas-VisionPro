@@ -71,7 +71,8 @@ struct ImmersiveView: View {
     private var heartPosition: SIMD3<Float> { viewerLayout.heroPosition + sceneLift }
     private var labelsPosition: SIMD3<Float> { viewerLayout.labelsPosition + sceneLift }
     private var panelPosition: SIMD3<Float> { viewerLayout.panelPosition }
-    private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition + sceneLift }
+    // Carousel rides a touch lower than the rest of the lifted scene.
+    private var carouselPosition: SIMD3<Float> { viewerLayout.carouselPosition + sceneLift - SIMD3<Float>(0, 0.05, 0) }
     private var visibleAnnotationIDs: Set<String> {
         guard appModel.selectedStudyMode == .labels else { return [] }
         // All curated labels stay visible; selecting one highlights it and softly dims
