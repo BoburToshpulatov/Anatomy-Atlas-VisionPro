@@ -29,9 +29,9 @@ struct OrganRealityView: View {
         case "brain":
             0.52
         case "lungs":
-            0.56
+            0.64
         case "kidneys":
-            0.50
+            0.58
         default:
             0.60
         }
