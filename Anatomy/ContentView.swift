@@ -281,8 +281,8 @@ private struct LauncherOrganCard: View {
                 .blur(radius: 40)
 
             Group {
-                if UIImage(named: "carousel_\(organ.id)") != nil {
-                    Image("carousel_\(organ.id)")
+                if UIImage(named: organ.carouselImageName) != nil {
+                    Image(organ.carouselImageName)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 } else {

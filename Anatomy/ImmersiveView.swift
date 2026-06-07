@@ -846,33 +846,22 @@ private struct ImmersiveHeroStage: View {
                     .frame(width: preset.floorGlowWidth * 0.50, height: preset.floorGlowHeight * 0.36)
                     .blur(radius: 12)
 
-                // Crisp, evenly concentric rings — clean and centered, graded for depth.
-                ForEach(Array([1.24, 1.04, 0.86, 0.66, 0.46].enumerated()), id: \.offset) { i, scale in
+                // Crisp, evenly concentric rings — clean and centered.
+                ForEach(Array([1.04, 0.86, 0.66, 0.46].enumerated()), id: \.offset) { i, scale in
                     Ellipse()
                         .stroke(
-                            LinearGradient(
-                                colors: [
-                                    (i == 3 ? organ.tint : Color.white).opacity([0.05, 0.10, 0.18, 0.45, 0.24][i]),
-                                    (i == 3 ? organ.tint : Color.white).opacity([0.02, 0.05, 0.09, 0.22, 0.12][i])
-                                ],
-                                startPoint: .top, endPoint: .bottom
-                            ),
-                            lineWidth: i == 3 ? 1.8 : 1.0
+                            (i == 2 ? organ.tint : Color.white).opacity([0.08, 0.16, 0.40, 0.22][i]),
+                            lineWidth: i == 2 ? 1.6 : 1.0
                         )
                         .frame(width: preset.floorGlowWidth * scale, height: preset.floorGlowHeight * scale)
                 }
 
-                // Defined accent rim — even all the way around (no side bias), with a glow.
+                // Defined accent rim — even all the way around (no side bias).
                 Ellipse()
-                    .strokeBorder(
-                        LinearGradient(colors: [organ.tint, organ.tint.opacity(0.55)],
-                                       startPoint: .top, endPoint: .bottom),
-                        lineWidth: 2.0
-                    )
+                    .strokeBorder(organ.tint.opacity(0.7), lineWidth: 1.6)
                     .frame(width: preset.floorGlowWidth * 0.66, height: preset.floorGlowHeight * 0.46)
-                    .shadow(color: organ.tint.opacity(0.6), radius: 8)
+                    .shadow(color: organ.tint.opacity(0.5), radius: 6)
             }
-            .scaleEffect(1.2)   // a bit bigger, premium presence
             .offset(y: preset.stageHeight * pedestalFraction)
             .offset(z: -44)
             .opacity(isGlowVisible ? 1 : 0)
@@ -1050,11 +1039,11 @@ private struct ImmersiveCarousel: View {
     let onNavigateRight: () -> Void
 
     var body: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 18) {
             ImmersiveNavButton(direction: .left, isEnabled: canNavigateLeft, action: onNavigateLeft)
-                .offset(y: -26)   // align with the thumbnail centre, not the text below
+                .offset(y: -18)
 
-            HStack(spacing: 22) {
+            HStack(spacing: 14) {
                 ForEach(organs) { organ in
                     ImmersiveCarouselCard(
                         organ: organ,
@@ -1063,93 +1052,126 @@ private struct ImmersiveCarousel: View {
                     .onTapGesture { onSelect(organ.id) }
                 }
             }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 14)
+            // Unified glassy dock so the carousel reads as one premium control.
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                            .fill(Color.black.opacity(0.28))
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.card, style: .continuous)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.8)
+            )
+            .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
 
             ImmersiveNavButton(direction: .right, isEnabled: canNavigateRight, action: onNavigateRight)
-                .offset(y: -26)
+                .offset(y: -18)
         }
         .opacity(isVisible ? 1 : 0)
         .frame(maxWidth: .infinity)
         .padding(.vertical, 2)
+        .animation(.spring(response: 0.46, dampingFraction: 0.82), value: selectedOrganID)
     }
 }
 
+/// Premium focus card: the active organ is featured large with its label and a tinted
+/// lit backdrop; the others stay compact and calm, so the carousel reads as a designed
+/// control rather than a flat line-up of images.
 private struct ImmersiveCarouselCard: View {
     let organ: AnatomyOrgan
     let isSelected: Bool
 
+    private var cardWidth: CGFloat { isSelected ? 188 : 116 }
+    private var cardHeight: CGFloat { 146 }
+
     var body: some View {
-        VStack(spacing: 11) {
+        VStack(spacing: 9) {
             ZStack {
-                // Calm glassy card base.
+                // Card base — selected gets a soft tinted gradient lift.
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
-                            .fill(Color.black.opacity(isSelected ? 0.34 : 0.46))
+                            .fill(
+                                LinearGradient(
+                                    colors: isSelected
+                                        ? [organ.tint.opacity(0.30), Color.black.opacity(0.30)]
+                                        : [Color.black.opacity(0.42), Color.black.opacity(0.5)],
+                                    startPoint: .top, endPoint: .bottom
+                                )
+                            )
                     )
 
-                // Soft tint bloom behind the organ image.
+                // Tint bloom behind the artwork (stronger when featured).
                 Circle()
-                    .fill(organ.tint.opacity(isSelected ? 0.35 : 0.14))
-                    .frame(width: 80, height: 80)
-                    .blur(radius: 26)
+                    .fill(organ.tint.opacity(isSelected ? 0.40 : 0.10))
+                    .frame(width: isSelected ? 110 : 64, height: isSelected ? 110 : 64)
+                    .blur(radius: 28)
 
-                // Realistic organ artwork — uses catalog art when present, else the 3D model.
-                Group {
-                    if UIImage(named: "carousel_\(organ.id)") != nil {
-                        Image("carousel_\(organ.id)")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } else {
-                        Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
-                            switch phase {
-                            case .success(let model): model.resizable().aspectRatio(contentMode: .fit)
-                            case .failure:
-                                Image(systemName: organ.symbolName)
-                                    .font(.system(size: 30, weight: .semibold))
-                                    .foregroundStyle(organ.tint.opacity(0.85))
-                            default: ProgressView().tint(.white.opacity(0.85))
-                            }
-                        }
-                    }
-                }
-                .frame(width: 132, height: 116)
-                .scaleEffect(isSelected ? 1.04 : 0.94)
-                .saturation(isSelected ? 1.0 : 0.85)
-                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                organArtwork
+                    .frame(width: isSelected ? 150 : 92, height: isSelected ? 126 : 92)
+                    .saturation(isSelected ? 1.0 : 0.7)
+                    .opacity(isSelected ? 1.0 : 0.82)
+                    .shadow(color: .black.opacity(0.32), radius: 5, y: 3)
             }
-            .frame(width: 168, height: 130)
+            .frame(width: cardWidth, height: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
                     .strokeBorder(
-                        isSelected ? organ.tint.opacity(0.6) : .white.opacity(0.14),
-                        lineWidth: isSelected ? 1.6 : 0.8
+                        isSelected ? organ.tint.opacity(0.7) : .white.opacity(0.12),
+                        lineWidth: isSelected ? 1.8 : 0.8
                     )
             }
-            .shadow(color: .black.opacity(0.28), radius: 9, y: 3)
+            .shadow(color: isSelected ? organ.tint.opacity(0.3) : .black.opacity(0.25),
+                    radius: isSelected ? 16 : 8, y: 4)
 
-            VStack(spacing: 3) {
+            // Label — full for the featured organ, compact title for the rest.
+            if isSelected {
+                VStack(spacing: 2) {
+                    Text(organ.title)
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.white)
+                    Text(organ.tagline)
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(organ.tint.opacity(0.95))
+                }
+                Capsule().fill(organ.tint).frame(width: 28, height: 3)
+            } else {
                 Text(organ.title)
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.8))
-
-                Text(organ.tagline)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(isSelected ? organ.tint.opacity(0.95) : .white.opacity(0.5))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(.top, 1)
             }
-
-            // Slim accent underline for the active organ — premium, restrained selection cue.
-            Capsule()
-                .fill(organ.tint)
-                .frame(width: isSelected ? 30 : 0, height: 3)
-                .opacity(isSelected ? 1 : 0)
         }
-        .frame(width: 196)
-        .padding(.vertical, 8)
+        .frame(width: cardWidth)
         .contentShape(Rectangle())
-        .scaleEffect(isSelected ? 1.03 : 1.0)
-        .animation(.spring(response: 0.42, dampingFraction: 0.84), value: isSelected)
+        .animation(.spring(response: 0.46, dampingFraction: 0.82), value: isSelected)
+    }
+
+    @ViewBuilder
+    private var organArtwork: some View {
+        if UIImage(named: organ.carouselImageName) != nil {
+            Image(organ.carouselImageName)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        } else {
+            Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                switch phase {
+                case .success(let model): model.resizable().aspectRatio(contentMode: .fit)
+                case .failure:
+                    Image(systemName: organ.symbolName)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(organ.tint.opacity(0.85))
+                default: ProgressView().tint(.white.opacity(0.85))
+                }
+            }
+        }
     }
 }
 

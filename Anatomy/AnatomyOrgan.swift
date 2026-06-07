@@ -186,6 +186,14 @@ extension AnatomyOrgan {
         hasBundledModel ? nil : "Model coming soon"
     }
 
+    /// Asset-catalog name for the organ's carousel/launcher artwork.
+    var carouselImageName: String {
+        switch id {
+        case "kidneys": return "carousel_kidney"
+        default:        return "carousel_\(id)"
+        }
+    }
+
     /// SF Symbols paired with each entry in `functions`, for the panel's Key Functions list.
     var functionSymbols: [String] {
         switch id {
