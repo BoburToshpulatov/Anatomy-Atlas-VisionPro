@@ -75,6 +75,8 @@ extension OrganLesson {
         switch organID {
         case "heart": return heart
         case "brain": return brain
+        case "lungs": return lungs
+        case "kidneys": return kidneys
         default:      return nil
         }
     }
@@ -172,6 +174,88 @@ extension OrganLesson {
             "Cerebellum → balance and coordination.",
             "Brainstem → automatic vital functions.",
             "Regions specialise but work as a network."
+        ]
+    )
+
+    // MARK: - Lungs
+
+    static let lungs = OrganLesson(
+        organID: "lungs",
+        overview: LessonSection(
+            heading: "What are the lungs?",
+            body: "The lungs are a pair of spongy, air-filled organs that fill most of the chest. Air drawn in through the trachea branches through bronchi and bronchioles to roughly 300 million alveoli, where oxygen passes into the blood and carbon dioxide passes out. The right lung has three lobes, the left has two, and a thin pleural membrane lets them glide as they expand and contract with each breath."
+        ),
+        anatomy: [
+            AnatomySection(name: "Airways",
+                blurb: "The trachea splits into bronchi, then ever-smaller bronchioles that distribute air through the lungs.",
+                labels: ["Trachea", "Bronchi", "Bronchioles"],
+                image: AssetSlot("lungs_airways", caption: "Airway tree", symbol: "wind")),
+            AnatomySection(name: "Lobes",
+                blurb: "The right lung has three lobes; the left has two, with a notch that makes room for the heart.",
+                labels: ["Right lung", "Left lung", "Lobes"],
+                image: AssetSlot("lungs_lobes", caption: "Lung lobes", symbol: "lungs.fill")),
+            AnatomySection(name: "Alveoli",
+                blurb: "Millions of tiny alveolar sacs, wrapped in capillaries, are where gas exchange happens.",
+                labels: ["Alveoli", "Capillaries", "Pleura"],
+                image: AssetSlot("lungs_alveoli", caption: "Alveoli", symbol: "circle.grid.3x3.fill"))
+        ],
+        functions: [
+            FunctionTopic(title: "Gas exchange", explanation: "Oxygen diffuses into the blood and carbon dioxide diffuses out across the thin alveolar walls.", symbol: "arrow.left.arrow.right", image: nil),
+            FunctionTopic(title: "Ventilation", explanation: "The diaphragm and rib muscles change chest volume to draw air in and push it out.", symbol: "wind", image: nil),
+            FunctionTopic(title: "Acid-base balance", explanation: "By adjusting how much CO₂ is exhaled, the lungs help regulate the blood's pH.", symbol: "humidity.fill", image: nil)
+        ],
+        realWorld: [
+            RealWorldNote(scenario: "Exercise", explanation: "Breathing rate and depth rise during exercise to take in more oxygen.", image: nil),
+            RealWorldNote(scenario: "High altitude", explanation: "Thinner air at altitude means less oxygen per breath, so breathing quickens.", image: nil),
+            RealWorldNote(scenario: "Asthma", explanation: "Narrowed, inflamed airways make it harder to move air, causing wheezing and breathlessness.", image: nil)
+        ],
+        summary: [
+            "Air travels: trachea → bronchi → alveoli.",
+            "Right lung: 3 lobes; left lung: 2.",
+            "Alveoli exchange O₂ and CO₂ with blood.",
+            "The diaphragm drives each breath.",
+            "Lungs also help balance blood pH."
+        ]
+    )
+
+    // MARK: - Kidneys
+
+    static let kidneys = OrganLesson(
+        organID: "kidneys",
+        overview: LessonSection(
+            heading: "What are the kidneys?",
+            body: "The kidneys are two bean-shaped organs sitting at the back of the abdomen. Together they filter all of the body's blood roughly every 30 minutes, removing waste and excess water as urine while returning useful substances to the blood. Each kidney holds about a million nephrons — microscopic filtering units — and the kidneys also help regulate blood pressure, fluid balance, and red blood cell production."
+        ),
+        anatomy: [
+            AnatomySection(name: "Cortex & medulla",
+                blurb: "The outer cortex holds the glomeruli; the inner medulla's pyramids concentrate urine.",
+                labels: ["Renal cortex", "Renal medulla", "Pyramids"],
+                image: AssetSlot("kidney_structure", caption: "Kidney layers", symbol: "square.stack.3d.up")),
+            AnatomySection(name: "Nephron",
+                blurb: "The nephron filters blood and fine-tunes what is kept and what becomes urine.",
+                labels: ["Glomerulus", "Tubule", "Loop of Henle"],
+                image: AssetSlot("kidney_nephron", caption: "Nephron", symbol: "drop.fill")),
+            AnatomySection(name: "Vessels & outflow",
+                blurb: "The renal artery supplies blood; the renal pelvis and ureter carry urine away.",
+                labels: ["Renal artery", "Renal pelvis", "Ureter"],
+                image: AssetSlot("kidney_vessels", caption: "Renal vessels", symbol: "point.topleft.down.curvedto.point.bottomright.up"))
+        ],
+        functions: [
+            FunctionTopic(title: "Blood filtration", explanation: "Nephrons filter waste and excess substances from blood to form urine.", symbol: "drop.fill", image: nil),
+            FunctionTopic(title: "Fluid & salt balance", explanation: "The kidneys adjust water and electrolyte levels to keep the body's balance steady.", symbol: "scalemass.fill", image: nil),
+            FunctionTopic(title: "Blood pressure", explanation: "By controlling fluid volume and releasing renin, the kidneys help regulate blood pressure.", symbol: "gauge.with.dots.needle.bottom.50percent", image: nil)
+        ],
+        realWorld: [
+            RealWorldNote(scenario: "Dehydration", explanation: "With little water, the kidneys concentrate urine to conserve fluid.", image: nil),
+            RealWorldNote(scenario: "Kidney stones", explanation: "Minerals can crystallise into stones that block the urinary tract and cause pain.", image: nil),
+            RealWorldNote(scenario: "Dialysis", explanation: "When kidneys fail, dialysis machines filter the blood artificially.", image: nil)
+        ],
+        summary: [
+            "Filter all blood ~every 30 minutes.",
+            "~1 million nephrons per kidney.",
+            "Cortex filters; medulla concentrates.",
+            "Balance water, salts, and pH.",
+            "Help regulate blood pressure."
         ]
     )
 }

@@ -44,7 +44,7 @@ struct ImmersiveView: View {
     @State private var viewerAngle: AnatomyOrgan.ViewerAngle = .front
     @State private var audio = SpatialAudioController()
 
-    private let carouselOrder = ["heart", "brain"]
+    private let carouselOrder = ["heart", "brain", "lungs", "kidneys"]
     private let maxAnnotationSlots = 8
     private var selectedOrgan: AnatomyOrgan { appModel.selectedOrgan }
     private var selectedAnnotation: OrganAnnotation? { appModel.selectedAnnotation }
@@ -1083,14 +1083,29 @@ private struct ImmersiveCarouselCard: View {
                     .frame(width: 80, height: 80)
                     .blur(radius: 26)
 
-                // Realistic organ artwork supplied in the asset catalog.
-                Image("carousel_\(organ.id)")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 132, height: 116)
-                    .scaleEffect(isSelected ? 1.04 : 0.94)
-                    .saturation(isSelected ? 1.0 : 0.85)
-                    .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                // Realistic organ artwork — uses catalog art when present, else the 3D model.
+                Group {
+                    if UIImage(named: "carousel_\(organ.id)") != nil {
+                        Image("carousel_\(organ.id)")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                            switch phase {
+                            case .success(let model): model.resizable().aspectRatio(contentMode: .fit)
+                            case .failure:
+                                Image(systemName: organ.symbolName)
+                                    .font(.system(size: 30, weight: .semibold))
+                                    .foregroundStyle(organ.tint.opacity(0.85))
+                            default: ProgressView().tint(.white.opacity(0.85))
+                            }
+                        }
+                    }
+                }
+                .frame(width: 132, height: 116)
+                .scaleEffect(isSelected ? 1.04 : 0.94)
+                .saturation(isSelected ? 1.0 : 0.85)
+                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
             }
             .frame(width: 168, height: 130)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous))

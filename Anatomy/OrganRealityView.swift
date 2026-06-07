@@ -28,6 +28,10 @@ struct OrganRealityView: View {
             0.72
         case "brain":
             0.52
+        case "lungs":
+            0.64
+        case "kidneys":
+            0.50
         default:
             0.60
         }
@@ -39,6 +43,10 @@ struct OrganRealityView: View {
             CGSize(width: 0.72, height: 0.82)
         case "brain":
             CGSize(width: 0.62, height: 0.70)
+        case "lungs":
+            CGSize(width: 0.66, height: 0.74)
+        case "kidneys":
+            CGSize(width: 0.58, height: 0.70)
         default:
             CGSize(width: 0.60, height: 0.74)
         }

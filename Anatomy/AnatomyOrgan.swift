@@ -175,7 +175,7 @@ struct OrganQuizQuestion: Identifiable, Hashable {
 extension AnatomyOrgan {
     var hasBundledModel: Bool {
         switch id {
-        case "heart", "brain":
+        case "heart", "brain", "lungs", "kidneys":
             return true
         default:
             return false
@@ -193,13 +193,17 @@ extension AnatomyOrgan {
             return ["drop.fill", "waveform.path.ecg", "lungs.fill"]
         case "brain":
             return ["eye.fill", "figure.walk", "lightbulb.fill"]
+        case "lungs":
+            return ["wind", "arrow.up.heart.fill", "humidity.fill"]
+        case "kidneys":
+            return ["drop.fill", "scalemass.fill", "waveform.path.ecg"]
         default:
             return []
         }
     }
 
     static let launcherFeatured: [AnatomyOrgan] = featured.filter { organ in
-        ["heart", "brain"].contains(organ.id)
+        ["heart", "brain", "lungs", "kidneys"].contains(organ.id)
     }
 
     static let featured: [AnatomyOrgan] = [
@@ -508,7 +512,28 @@ extension AnatomyOrgan {
                 labelLeftX: 0.06, labelRightX: 0.88, labelWidth: 232,
                 labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 470, floorGlowHeight: 120
             ),
-            atlasNotes: []
+            atlasNotes: [
+                OrganAnnotation(id: "lungs-trachea", title: "Trachea", subtitle: "Main airway",
+                    detail: "The trachea (windpipe) channels air from the larynx down to the bronchi.",
+                    anchor: CGPoint(x: 0.50, y: 0.12), side: .right, lane: 0.10,
+                    focusYaw: 0, focusPitch: -6, focusScale: 1.2, focusOffset: .zero),
+                OrganAnnotation(id: "lungs-right-bronchus", title: "Bronchi", subtitle: "Airway branches",
+                    detail: "The primary bronchi split from the trachea and branch into each lung as bronchioles.",
+                    anchor: CGPoint(x: 0.56, y: 0.34), side: .right, lane: 0.34,
+                    focusYaw: -10, focusPitch: -4, focusScale: 1.2, focusOffset: .zero),
+                OrganAnnotation(id: "lungs-right-lung", title: "Right Lung", subtitle: "Three lobes",
+                    detail: "The right lung has three lobes (upper, middle, lower) and is slightly larger than the left.",
+                    anchor: CGPoint(x: 0.66, y: 0.60), side: .right, lane: 0.62,
+                    focusYaw: -14, focusPitch: -2, focusScale: 1.16, focusOffset: .zero),
+                OrganAnnotation(id: "lungs-left-lung", title: "Left Lung", subtitle: "Two lobes",
+                    detail: "The left lung has two lobes and a cardiac notch that makes room for the heart.",
+                    anchor: CGPoint(x: 0.34, y: 0.60), side: .left, lane: 0.60,
+                    focusYaw: 14, focusPitch: -2, focusScale: 1.16, focusOffset: .zero),
+                OrganAnnotation(id: "lungs-alveoli", title: "Alveoli", subtitle: "Gas exchange",
+                    detail: "Millions of tiny alveolar sacs exchange oxygen and carbon dioxide with the blood.",
+                    anchor: CGPoint(x: 0.40, y: 0.80), side: .left, lane: 0.84,
+                    focusYaw: 10, focusPitch: 0, focusScale: 1.2, focusOffset: .zero)
+            ]
         ),
         AnatomyOrgan(
             id: "liver",
@@ -565,7 +590,7 @@ extension AnatomyOrgan {
                 "Ureters and renal pelvis"
             ],
             symbolName: "drop.circle.fill",
-            modelName: "Human_Kidneys.usdz",
+            modelName: "Human_Kidney.usdz",
             tint: Color(red: 0.64, green: 0.32, blue: 0.64),
             heroScale: 0.98,
             heroOffset: CGSize(width: 0, height: 14),
@@ -580,7 +605,28 @@ extension AnatomyOrgan {
                 labelLeftX: 0.06, labelRightX: 0.88, labelWidth: 232,
                 labelSelectedZ: 74, labelRestZ: 20, floorGlowWidth: 450, floorGlowHeight: 116
             ),
-            atlasNotes: []
+            atlasNotes: [
+                OrganAnnotation(id: "kidney-cortex", title: "Renal Cortex", subtitle: "Outer filter layer",
+                    detail: "The cortex holds the glomeruli where blood filtration begins.",
+                    anchor: CGPoint(x: 0.62, y: 0.28), side: .right, lane: 0.14,
+                    focusYaw: -12, focusPitch: -4, focusScale: 1.2, focusOffset: .zero),
+                OrganAnnotation(id: "kidney-medulla", title: "Renal Medulla", subtitle: "Pyramids",
+                    detail: "The medulla contains the renal pyramids that concentrate urine.",
+                    anchor: CGPoint(x: 0.60, y: 0.52), side: .right, lane: 0.46,
+                    focusYaw: -12, focusPitch: -2, focusScale: 1.18, focusOffset: .zero),
+                OrganAnnotation(id: "kidney-pelvis", title: "Renal Pelvis", subtitle: "Urine collection",
+                    detail: "The renal pelvis funnels urine from the kidney into the ureter.",
+                    anchor: CGPoint(x: 0.40, y: 0.50), side: .left, lane: 0.40,
+                    focusYaw: 12, focusPitch: -2, focusScale: 1.18, focusOffset: .zero),
+                OrganAnnotation(id: "kidney-artery", title: "Renal Artery", subtitle: "Blood supply",
+                    detail: "The renal artery delivers blood to the kidney for filtration.",
+                    anchor: CGPoint(x: 0.44, y: 0.30), side: .left, lane: 0.16,
+                    focusYaw: 12, focusPitch: -4, focusScale: 1.2, focusOffset: .zero),
+                OrganAnnotation(id: "kidney-ureter", title: "Ureter", subtitle: "Outflow tube",
+                    detail: "The ureter carries urine from the renal pelvis down to the bladder.",
+                    anchor: CGPoint(x: 0.50, y: 0.82), side: .left, lane: 0.84,
+                    focusYaw: 8, focusPitch: 2, focusScale: 1.2, focusOffset: .zero)
+            ]
         ),
         AnatomyOrgan(
             id: "stomach",
@@ -966,6 +1012,92 @@ extension AnatomyOrgan {
                     category: "Real-World"
                 )
             ]
+        case "lungs":
+            return [
+                OrganQuizQuestion(
+                    id: "lungs-quiz-exchange",
+                    title: "Gas exchange",
+                    prompt: "Where does oxygen enter the bloodstream in the lungs?",
+                    answers: ["Trachea", "Alveoli", "Pleura"],
+                    correctAnswerIndex: 1,
+                    hint: "Tiny air sacs surrounded by capillaries.",
+                    explanation: "Oxygen and carbon dioxide are exchanged across the thin walls of the alveoli.",
+                    kind: .multipleChoice, category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "lungs-quiz-lobes",
+                    title: "Lobe count",
+                    prompt: "How many lobes does the right lung have?",
+                    answers: ["Two", "Three", "Four"],
+                    correctAnswerIndex: 1,
+                    hint: "One more than the left lung.",
+                    explanation: "The right lung has three lobes; the left has two, leaving room for the heart.",
+                    kind: .multipleChoice, category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "lungs-quiz-airway",
+                    title: "Main airway",
+                    prompt: "Match the function to its structure: \"Carries air from the larynx toward the lungs.\"",
+                    answers: ["Trachea", "Alveoli", "Diaphragm"],
+                    correctAnswerIndex: 0,
+                    hint: "Also called the windpipe.",
+                    explanation: "The trachea is the main airway channeling air down to the bronchi.",
+                    kind: .matchFunction, category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "lungs-quiz-exercise",
+                    title: "Breathing under load",
+                    prompt: "During exercise, what increases to take in more oxygen?",
+                    answers: ["Breathing rate and depth", "Number of lobes", "Lung colour"],
+                    correctAnswerIndex: 0,
+                    hint: "Think about what changes when you run.",
+                    explanation: "Breathing rate and tidal volume rise during exercise to meet oxygen demand.",
+                    kind: .scenario, category: "Real-World"
+                )
+            ]
+        case "kidneys":
+            return [
+                OrganQuizQuestion(
+                    id: "kidney-quiz-filter",
+                    title: "Filtration unit",
+                    prompt: "What is the functional filtering unit of the kidney?",
+                    answers: ["Nephron", "Alveolus", "Lobule"],
+                    correctAnswerIndex: 0,
+                    hint: "Millions of these filter your blood.",
+                    explanation: "The nephron is the kidney's microscopic filtering unit, forming urine from blood.",
+                    kind: .multipleChoice, category: "Functionality"
+                ),
+                OrganQuizQuestion(
+                    id: "kidney-quiz-cortex",
+                    title: "Outer layer",
+                    prompt: "Which layer holds the glomeruli where filtration begins?",
+                    answers: ["Renal medulla", "Renal cortex", "Renal pelvis"],
+                    correctAnswerIndex: 1,
+                    hint: "The outer shell of the kidney.",
+                    explanation: "The renal cortex contains the glomeruli where blood filtration starts.",
+                    kind: .multipleChoice, category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "kidney-quiz-ureter",
+                    title: "Urine outflow",
+                    prompt: "Match the function to its structure: \"Carries urine from the kidney to the bladder.\"",
+                    answers: ["Ureter", "Renal artery", "Cortex"],
+                    correctAnswerIndex: 0,
+                    hint: "A muscular tube leaving the renal pelvis.",
+                    explanation: "The ureter transports urine from the renal pelvis down to the bladder.",
+                    kind: .matchFunction, category: "Anatomy"
+                ),
+                OrganQuizQuestion(
+                    id: "kidney-quiz-balance",
+                    title: "Fluid balance",
+                    prompt: "On a hot day with little water, the kidneys mainly do what?",
+                    answers: ["Concentrate urine to save water", "Stop filtering blood", "Make more urine"],
+                    correctAnswerIndex: 0,
+                    hint: "The body wants to conserve fluid.",
+                    explanation: "When dehydrated, the kidneys concentrate urine to conserve water and maintain balance.",
+                    kind: .scenario, category: "Real-World"
+                )
+            ]
         default:
             return []
         }
@@ -1054,6 +1186,56 @@ extension AnatomyOrgan {
                     "brain-temporal": .init(anchor: CGPoint(x: 0.64, y: 0.62), side: .right, lane: 0.50),   // temporal lobe, lower side
                     "brain-cerebellum": .init(anchor: CGPoint(x: 0.43, y: 0.74), side: .left, lane: 0.66),  // cerebellum, lower back
                     "brain-brainstem": .init(anchor: CGPoint(x: 0.49, y: 0.88), side: .left, lane: 0.82)    // brainstem, central stalk
+                ]
+            )
+        case ("lungs", .front):
+            return ViewerLayout(
+                heroPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                labelsPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                panelPosition: SIMD3<Float>(0.88, 1.56, -1.58),
+                panelWidth: 818,
+                carouselPosition: SIMD3<Float>(0.0, 1.06, -1.12),
+                heroYawOffset: 0,
+                heroPitchOffset: 0,
+                heroVisualOffset: .zero,
+                labelLeftX: 0.42,
+                labelRightX: 0.42,
+                labelWidth: 264,
+                labelSelectedZ: 96,
+                labelRestZ: 34,
+                anchorSpreadX: 0.50,
+                anchorSpreadY: 0.56,
+                annotationPlacements: [
+                    "lungs-trachea": .init(anchor: CGPoint(x: 0.52, y: 0.16), side: .right, lane: 0.12),
+                    "lungs-right-bronchus": .init(anchor: CGPoint(x: 0.58, y: 0.36), side: .right, lane: 0.40),
+                    "lungs-right-lung": .init(anchor: CGPoint(x: 0.66, y: 0.62), side: .right, lane: 0.66),
+                    "lungs-left-lung": .init(anchor: CGPoint(x: 0.34, y: 0.62), side: .left, lane: 0.62),
+                    "lungs-alveoli": .init(anchor: CGPoint(x: 0.40, y: 0.82), side: .left, lane: 0.84)
+                ]
+            )
+        case ("kidneys", .front):
+            return ViewerLayout(
+                heroPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                labelsPosition: SIMD3<Float>(0.0, 1.54, -1.82),
+                panelPosition: SIMD3<Float>(0.88, 1.56, -1.58),
+                panelWidth: 818,
+                carouselPosition: SIMD3<Float>(0.0, 1.06, -1.12),
+                heroYawOffset: 0,
+                heroPitchOffset: 0,
+                heroVisualOffset: .zero,
+                labelLeftX: 0.42,
+                labelRightX: 0.42,
+                labelWidth: 264,
+                labelSelectedZ: 96,
+                labelRestZ: 34,
+                anchorSpreadX: 0.46,
+                anchorSpreadY: 0.54,
+                annotationPlacements: [
+                    "kidney-artery": .init(anchor: CGPoint(x: 0.44, y: 0.32), side: .left, lane: 0.16),
+                    "kidney-cortex": .init(anchor: CGPoint(x: 0.62, y: 0.30), side: .right, lane: 0.16),
+                    "kidney-medulla": .init(anchor: CGPoint(x: 0.58, y: 0.52), side: .right, lane: 0.48),
+                    "kidney-pelvis": .init(anchor: CGPoint(x: 0.42, y: 0.52), side: .left, lane: 0.46),
+                    "kidney-ureter": .init(anchor: CGPoint(x: 0.50, y: 0.82), side: .left, lane: 0.84)
                 ]
             )
         default:

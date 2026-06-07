@@ -92,7 +92,7 @@ struct ContentView: View {
                             }
                             .multilineTextAlignment(.center)
 
-                            HStack(spacing: 30) {
+                            HStack(spacing: 16) {
                                 ForEach(organs) { organ in
                                     LauncherOrganCard(
                                         organ: organ,
@@ -253,21 +253,21 @@ private struct LauncherOrganCard: View {
         VStack(spacing: 16) {
             // Model sits directly on the panel — no box behind it
             organPreview
-                .frame(width: 250, height: 188)
+                .frame(width: 176, height: 138)
 
-            VStack(spacing: 5) {
+            VStack(spacing: 4) {
                 Text(organ.title)
-                    .font(.title2.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
 
                 Text(organ.tagline)
-                    .font(.title3.weight(.medium))
+                    .font(.callout.weight(.medium))
                     .foregroundStyle(.white.opacity(0.66))
             }
         }
-        .padding(24)
+        .padding(18)
         // Identical fixed size; selection shown only by the shared surface's border.
-        .frame(width: 320, height: 312)
+        .frame(width: 232, height: 248)
         .premiumSurface(radius: DS.Radius.card, selected: isSelected, tint: organ.tint)
         .animation(.spring(response: 0.4, dampingFraction: 0.84), value: isSelected)
     }
@@ -280,13 +280,28 @@ private struct LauncherOrganCard: View {
                 .frame(width: 150, height: 150)
                 .blur(radius: 40)
 
-            Image("carousel_\(organ.id)")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .scaleEffect(isSelected ? 1.04 : 0.92)
-                .saturation(isSelected ? 1.0 : 0.85)
-                .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
-                .padding(16)
+            Group {
+                if UIImage(named: "carousel_\(organ.id)") != nil {
+                    Image("carousel_\(organ.id)")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } else {
+                    Model3D(named: organ.modelName, bundle: realityKitContentBundle) { phase in
+                        switch phase {
+                        case .success(let model): model.resizable().aspectRatio(contentMode: .fit)
+                        case .failure:
+                            Image(systemName: organ.symbolName)
+                                .font(.system(size: 48, weight: .bold))
+                                .foregroundStyle(.white.opacity(0.86))
+                        default: ProgressView().tint(.white)
+                        }
+                    }
+                }
+            }
+            .scaleEffect(isSelected ? 1.04 : 0.92)
+            .saturation(isSelected ? 1.0 : 0.85)
+            .shadow(color: .black.opacity(0.35), radius: 8, y: 4)
+            .padding(16)
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.84), value: isSelected)
     }
