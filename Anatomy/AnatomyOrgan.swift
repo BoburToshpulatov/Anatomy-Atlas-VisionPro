@@ -500,7 +500,7 @@ extension AnatomyOrgan {
             modelName: "Human_Lungs.usdz",
             tint: Color(red: 0.46, green: 0.71, blue: 0.96),
             heroScale: 0.98,
-            heroOffset: CGSize(width: 0, height: 8),
+            heroOffset: CGSize(width: 0, height: -4),
             baseYaw: -4,
             basePitch: -6,
             glowScale: 1.08,
