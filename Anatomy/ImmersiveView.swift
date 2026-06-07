@@ -60,13 +60,13 @@ struct ImmersiveView: View {
     /// Panel width per mode — narrower in Labels so right-side callouts have room.
     private var panelWidthForMode: CGFloat {
         switch appModel.selectedStudyMode {
-        case .learn:  return 1360   // theater: wide, centered reader
+        case .learn:  return 1680   // theater: wide, centered reader
         case .labels: return 600    // narrower so right-side callouts have room
         default:      return viewerLayout.panelWidth
         }
     }
     private var panelHeightForMode: CGFloat {
-        learnActive ? 1200 : ImmersiveLayoutConfig.panelHeight
+        learnActive ? 1320 : ImmersiveLayoutConfig.panelHeight
     }
     // Faces the viewer straight on in the centered Learn theater; angled inward otherwise.
     private var panelOrientation: simd_quatf {
@@ -293,7 +293,7 @@ struct ImmersiveView: View {
                 .opacity(panelVisible ? 1 : 0.001)
                 // Theater Learn mode: glide the panel to centre and forward, covering the scene.
                 .offset(x: learnActive ? CGFloat(-panelPosition.x * 1360) : 0)
-                .offset(z: learnActive ? 280 : 0)
+                .offset(z: learnActive ? 340 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.82), value: appModel.selectedStudyMode)
             }
 
@@ -1378,7 +1378,8 @@ private struct ImmersiveInfoPanel: View {
         // Pinned footer — Start Quiz / Learn More are always visible regardless of
         // how tall the scrolling content is (fixes the clipped button on Brain).
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if studyMode != .quiz {
+            // No footer buttons in the Learn theater — the reader fills the whole panel.
+            if studyMode != .quiz && studyMode != .learn {
                 VStack(spacing: 12) {
                     Button(action: onStartQuiz) {
                         HStack(spacing: 10) {
