@@ -1239,11 +1239,13 @@ extension AnatomyOrgan {
                 anchorSpreadX: 0.46,
                 anchorSpreadY: 0.54,
                 annotationPlacements: [
-                    "kidney-artery": .init(anchor: CGPoint(x: 0.44, y: 0.32), side: .left, lane: 0.16),
+                    // Left dots ordered top→bottom (pelvis, artery, ureter) to match label
+                    // order so the leader lines never cross.
+                    "kidney-pelvis": .init(anchor: CGPoint(x: 0.46, y: 0.34), side: .left, lane: 0.16),
+                    "kidney-artery": .init(anchor: CGPoint(x: 0.44, y: 0.52), side: .left, lane: 0.46),
+                    "kidney-ureter": .init(anchor: CGPoint(x: 0.52, y: 0.82), side: .left, lane: 0.84),
                     "kidney-cortex": .init(anchor: CGPoint(x: 0.62, y: 0.30), side: .right, lane: 0.16),
-                    "kidney-medulla": .init(anchor: CGPoint(x: 0.58, y: 0.52), side: .right, lane: 0.48),
-                    "kidney-pelvis": .init(anchor: CGPoint(x: 0.42, y: 0.52), side: .left, lane: 0.46),
-                    "kidney-ureter": .init(anchor: CGPoint(x: 0.50, y: 0.82), side: .left, lane: 0.84)
+                    "kidney-medulla": .init(anchor: CGPoint(x: 0.60, y: 0.54), side: .right, lane: 0.48)
                 ]
             )
         default:
