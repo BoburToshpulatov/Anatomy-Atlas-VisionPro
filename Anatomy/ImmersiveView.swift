@@ -1949,41 +1949,52 @@ private struct QuizSection: View {
 
     var body: some View {
         if let question {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 // Header row: progress + question kind
                 HStack {
                     Text("Question \(questionNumber) of \(questionCount)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white.opacity(0.65))
                     Spacer()
                     Label(question.kind.label, systemImage: question.kind.symbol)
-                        .font(.caption.weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(organ.tint)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(organ.tint.opacity(0.16), in: Capsule())
                 }
 
+                // Progress bar across the quiz
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(.white.opacity(0.1))
+                        Capsule().fill(organ.tint)
+                            .frame(width: geo.size.width * CGFloat(questionNumber) / CGFloat(max(questionCount, 1)))
+                    }
+                }
+                .frame(height: 6)
+
                 // Category badge
                 Text(question.category.uppercased())
-                    .font(.caption2.weight(.bold))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(.white.opacity(0.5))
-                    .tracking(0.8)
+                    .tracking(1.0)
 
                 // Optional illustration
                 if let slot = question.imageSlot {
                     AnatomyImage(slot: slot, tint: organ.tint)
-                        .frame(height: 150)
+                        .frame(height: 170)
                 }
 
                 // Prompt
                 Text(question.prompt)
-                    .font(.title3.weight(.bold))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
 
                 // Answers
-                VStack(spacing: 10) {
+                VStack(spacing: 12) {
                     ForEach(Array(question.answers.enumerated()), id: \.offset) { index, answer in
                         QuizAnswerButton(
                             answer: answer,
@@ -2039,20 +2050,22 @@ private struct QuizFeedbackBanner: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
+            HStack(spacing: 11) {
                 Image(systemName: isCorrect ? "checkmark.circle.fill" : "lightbulb.fill")
+                    .font(.title3)
                     .foregroundStyle(isCorrect ? .green.opacity(0.92) : tint.opacity(0.92))
 
                 Text(isCorrect ? "Correct" : "Gentle hint")
-                    .font(.headline.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
             }
 
             Text(isCorrect ? explanation : hint)
-                .font(.body.weight(.medium))
-                .foregroundStyle(.white.opacity(0.82))
+                .font(.title3.weight(.medium))
+                .foregroundStyle(.white.opacity(0.85))
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
+        .padding(18)
         .background((isCorrect ? Color.green.opacity(0.12) : tint.opacity(0.14)), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -2074,31 +2087,31 @@ private struct QuizAnswerButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 ZStack {
-                    Circle().fill(markerFill).frame(width: 26, height: 26)
+                    Circle().fill(markerFill).frame(width: 34, height: 34)
                     if isCorrect {
-                        Image(systemName: "checkmark").font(.caption.weight(.bold)).foregroundStyle(.white)
+                        Image(systemName: "checkmark").font(.subheadline.weight(.bold)).foregroundStyle(.white)
                     } else if isIncorrect {
-                        Image(systemName: "xmark").font(.caption.weight(.bold)).foregroundStyle(.white)
+                        Image(systemName: "xmark").font(.subheadline.weight(.bold)).foregroundStyle(.white)
                     } else {
-                        Text(letter).font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.9))
+                        Text(letter).font(.headline.weight(.bold)).foregroundStyle(.white.opacity(0.9))
                     }
                 }
 
                 Text(answer)
-                    .font(.body.weight(.semibold))
+                    .font(.title3.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.94))
                     .fixedSize(horizontal: false, vertical: true)
 
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 13)
-            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .padding(.horizontal, 18)
+            .padding(.vertical, 17)
+            .background(backgroundColor, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: isSelected || isCorrect || isIncorrect ? 1.6 : 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(borderColor, lineWidth: isSelected || isCorrect || isIncorrect ? 1.8 : 1)
             }
         }
         .buttonStyle(.plain)
@@ -2344,11 +2357,11 @@ struct LearnTheaterPanel: View {
                 .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
                 LearnReaderView(organID: organ.id, tint: organ.tint)
-                    .frame(height: 980)
-                    .padding(.horizontal, 34)
-                    .padding(.bottom, 22)
+                    .frame(height: 1080)
+                    .padding(.horizontal, 36)
+                    .padding(.bottom, 26)
             }
-            .frame(width: 1720)
+            .frame(width: 1860)
             .background(
                 LinearGradient(
                     colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
