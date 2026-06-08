@@ -69,6 +69,7 @@ final class AppModel {
     }
 
     static let immersiveSpaceID = "anatomy-study-space"
+    static let learnWindowID = "anatomy-learn-reader"
 
     let immersiveSpaceID = AppModel.immersiveSpaceID
 
