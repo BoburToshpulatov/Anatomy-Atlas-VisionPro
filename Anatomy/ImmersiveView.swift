@@ -2330,7 +2330,7 @@ struct LearnTheaterPanel: View {
                 onSelectMode(title)
             }
             .scaleEffect(1.25)
-            .padding(.bottom, 6)
+            .padding(.bottom, 28)
 
             // Opaque panel card.
             VStack(spacing: 0) {
