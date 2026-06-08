@@ -2329,12 +2329,19 @@ struct LearnReaderWindow: View {
             .scrollIndicators(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Solid, opaque panel material (no passthrough/glass) — matches the old study panel.
         .background(
             RoundedRectangle(cornerRadius: 42, style: .continuous)
-                .fill(Color.black.opacity(0.9))
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
+                                 Color(red: 0.05, green: 0.05, blue: 0.06)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: 42, style: .continuous)
-                        .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+                        .strokeBorder(.white.opacity(0.10), lineWidth: 1)
                 )
         )
         .onDisappear {
