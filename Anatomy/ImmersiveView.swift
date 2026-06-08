@@ -2337,10 +2337,11 @@ struct LearnReaderWindow: View {
                     .strokeBorder(.white.opacity(0.10), lineWidth: 1)
             )
         }
-        // Fixed content size so the window is exactly this big and the system centers it
-        // (no empty area below the panel, no top-bias). Tall enough to show a chapter
-        // without scrolling.
-        .frame(width: 1520, height: 1280)
+        // Transparent top gap pushes the visible panel lower in the (centered) window.
+        .padding(.top, 150)
+        // Fixed content size so the window is exactly this big and the system centers it.
+        // Tall enough to show a chapter without scrolling.
+        .frame(width: 1520, height: 1430)
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
         }
