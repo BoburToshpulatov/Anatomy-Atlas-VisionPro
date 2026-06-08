@@ -80,8 +80,10 @@ struct ImmersiveView: View {
                 entity.setParent(headAnchor, preservingWorldTransform: false)
             }
             entity.position = SIMD3<Float>(0, -0.10, -1.6)   // dead ahead, just under the tabs
-            entity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))   // flat, facing the viewer
+            // Billboard so it squarely faces the actual view — perfectly flat, no lean.
+            entity.components.set(BillboardComponent())
         } else {
+            entity.components.remove(BillboardComponent.self)
             if entity.parent !== worldRoot {
                 entity.setParent(worldRoot, preservingWorldTransform: false)
             }
