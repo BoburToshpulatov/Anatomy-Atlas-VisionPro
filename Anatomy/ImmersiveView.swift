@@ -2337,11 +2337,9 @@ struct LearnReaderWindow: View {
                     .strokeBorder(.white.opacity(0.10), lineWidth: 1)
             )
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Small downward nudge only — no horizontal offset (that pushed the panel past the
-        // window edge and clipped it). Use the window's own drag handle to reposition.
-        .padding(.top, 40)
-        // Outer area is transparent so the tab pill reads as a detached control above the panel.
+        // Fixed content size so the window is exactly this big and the system centers it
+        // (no empty area below the panel, no top-bias).
+        .frame(width: 1480, height: 940)
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
         }
