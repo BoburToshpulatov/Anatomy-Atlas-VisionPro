@@ -2338,9 +2338,9 @@ struct LearnReaderWindow: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // Nudge the whole tabs+panel group down and a bit left within the (transparent) window.
-        .padding(.top, 80)
-        .offset(x: -70, y: 40)
+        // Small downward nudge only — no horizontal offset (that pushed the panel past the
+        // window edge and clipped it). Use the window's own drag handle to reposition.
+        .padding(.top, 40)
         // Outer area is transparent so the tab pill reads as a detached control above the panel.
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
