@@ -218,8 +218,9 @@ struct ImmersiveView: View {
             }
 
             Attachment(id: "ambient-aura") {
-                ImmersiveAuraField(tint: selectedOrgan.tint, isVisible: backgroundGlowVisible)
+                ImmersiveAuraField(tint: selectedOrgan.tint, isVisible: backgroundGlowVisible && !learnActive)
                     .frame(width: ImmersiveLayoutConfig.auraSize, height: ImmersiveLayoutConfig.auraSize)
+                    .opacity(learnActive ? 0 : 1)
                     .allowsHitTesting(false)   // decorative only — never intercept taps
             }
 
@@ -235,10 +236,11 @@ struct ImmersiveView: View {
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
                 .scaleEffect((heroVisible ? 0.98 : 0.88) * (learnActive ? 0.78 : 1.0))
-                // In Learn the organ recedes to a faded backdrop (context), not hidden.
-                .opacity(learnActive ? 0.4 : 1.0)
+                // Fully hidden in Learn so nothing shows behind/over the reader panel.
+                .opacity(learnActive ? 0.0 : 1.0)
                 .blur(radius: learnActive ? 8 : 0)
                 .offset(z: learnActive ? -260 : 0)
+                .allowsHitTesting(!learnActive)
                 .animation(.spring(response: 0.6, dampingFraction: 0.82), value: learnActive)
                 // The hero organ is purely visual — all interaction happens through the
                 // label, panel and carousel attachments. Disabling hit testing on this
