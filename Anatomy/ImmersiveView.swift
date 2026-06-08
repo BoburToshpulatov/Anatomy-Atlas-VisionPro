@@ -79,9 +79,10 @@ struct ImmersiveView: View {
             if entity.parent !== headAnchor {
                 entity.setParent(headAnchor, preservingWorldTransform: false)
             }
-            // Directly ahead, a touch below eye line, facing the viewer.
-            entity.position = SIMD3<Float>(0, -0.05, -1.5)
-            entity.orientation = simd_quatf(angle: 0, axis: [0, 1, 0])
+            // Directly ahead and lowered so the mode tabs clear above it; faces the viewer
+            // with a tiny upward tilt so it meets the natural downward reading gaze.
+            entity.position = SIMD3<Float>(0, -0.22, -1.55)
+            entity.orientation = simd_quatf(angle: 0.06, axis: [1, 0, 0])
         } else {
             if entity.parent !== worldRoot {
                 entity.setParent(worldRoot, preservingWorldTransform: false)
