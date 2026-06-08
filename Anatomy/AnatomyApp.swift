@@ -21,16 +21,6 @@ struct AnatomyApp: App {
         .defaultSize(width: 1300, height: 920)
         .windowResizability(.contentSize)
 
-        // Learn reader — a flat system window (always faces the viewer, no perspective lean).
-        WindowGroup(id: AppModel.learnWindowID) {
-            LearnReaderWindow()
-                .environment(appModel)
-                .persistentSystemOverlays(.hidden)   // hide the window grabber/chrome
-        }
-        .windowStyle(.plain)
-        .defaultSize(width: 1540, height: 1160)
-        .windowResizability(.contentSize)
-
         ImmersiveSpace(id: AppModel.immersiveSpaceID) {
             ImmersiveView()
                 .environment(appModel)
