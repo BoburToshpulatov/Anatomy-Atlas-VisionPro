@@ -88,7 +88,7 @@ struct ImmersiveView: View {
         if entity.parent !== headAnchor {
             entity.setParent(headAnchor, preservingWorldTransform: false)
         }
-        entity.position = SIMD3<Float>(0, -0.02, -1.75)
+        entity.position = SIMD3<Float>(0, -0.02, -1.5)   // closer = larger in view
         entity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
@@ -2316,6 +2316,8 @@ struct LearnTheaterPanel: View {
             ImmersiveModeBar(items: modeTitles, selectedItem: selectedMode, accent: organ.tint) { title in
                 onSelectMode(title)
             }
+            .scaleEffect(1.25)
+            .padding(.bottom, 6)
 
             // Opaque panel card.
             VStack(spacing: 0) {
@@ -2342,11 +2344,11 @@ struct LearnTheaterPanel: View {
                 .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
                 LearnReaderView(organID: organ.id, tint: organ.tint)
-                    .frame(height: 760)
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 18)
+                    .frame(height: 840)
+                    .padding(.horizontal, 34)
+                    .padding(.bottom, 20)
             }
-            .frame(width: 1480)
+            .frame(width: 1680)
             .background(
                 LinearGradient(
                     colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
