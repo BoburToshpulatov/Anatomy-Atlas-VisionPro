@@ -274,11 +274,25 @@ private struct LauncherOrganCard: View {
 
     private var organPreview: some View {
         ZStack {
+            // Soft graded backdrop so the artwork sits on a lit surface, not flat black.
+            RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [organ.tint.opacity(isSelected ? 0.30 : 0.16),
+                                 Color.white.opacity(0.04)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: DS.Radius.thumbnail, style: .continuous)
+                        .strokeBorder(.white.opacity(0.08), lineWidth: 1)
+                )
+
             // Soft tint bloom behind the artwork for a premium, lit feel.
             Circle()
-                .fill(organ.tint.opacity(isSelected ? 0.32 : 0.12))
-                .frame(width: 150, height: 150)
-                .blur(radius: 40)
+                .fill(organ.tint.opacity(isSelected ? 0.45 : 0.24))
+                .frame(width: 160, height: 160)
+                .blur(radius: 44)
 
             Group {
                 if UIImage(named: organ.carouselImageName) != nil {
