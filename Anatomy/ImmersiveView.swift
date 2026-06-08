@@ -211,6 +211,10 @@ struct ImmersiveView: View {
                     }
                     .frame(width: ImmersiveLayoutConfig.topBarWidth)
                 }
+                // Hidden in Learn — the Learn window carries its own detached tab pill.
+                .opacity(learnActive ? 0 : 1)
+                .allowsHitTesting(!learnActive)
+                .animation(.easeInOut(duration: 0.3), value: learnActive)
             }
 
             Attachment(id: "ambient-aura") {
@@ -2275,49 +2279,67 @@ struct LearnReaderWindow: View {
     private var modeTitles: [String] { AppModel.StudyMode.allCases.map(\.title) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 16) {
-                Button(action: exitLearn) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "chevron.left").font(.headline.weight(.bold))
-                        Text("Back").font(.headline.weight(.semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 11)
-                    .background(Capsule().fill(organ.tint))
+        VStack(spacing: 18) {
+            // Detached tab pill — floats ABOVE the panel, outside its border.
+            ImmersiveModeBar(
+                items: modeTitles,
+                selectedItem: appModel.selectedStudyMode.title,
+                accent: organ.tint
+            ) { title in
+                if let mode = AppModel.StudyMode.allCases.first(where: { $0.title == title }) {
+                    appModel.setStudyMode(mode)
+                    if mode != .learn { dismissWindow(id: AppModel.learnWindowID) }
                 }
-                .buttonStyle(.plain)
-
-                Text(organ.title)
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .padding(.leading, 8)
-
-                Spacer()
             }
-            .padding(.horizontal, 30).padding(.top, 26).padding(.bottom, 4)
 
-            ScrollView {
-                LearnModeSection(organ: organ)
-                    .padding(.horizontal, 30).padding(.vertical, 20)
+            // The opaque panel card below the tabs.
+            VStack(spacing: 0) {
+                HStack(alignment: .center, spacing: 16) {
+                    Button(action: exitLearn) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.left").font(.headline.weight(.bold))
+                            Text("Back").font(.headline.weight(.semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 11)
+                        .background(Capsule().fill(organ.tint))
+                    }
+                    .buttonStyle(.plain)
+
+                    Text(organ.title)
+                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.leading, 8)
+
+                    Spacer()
+                }
+                .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 4)
+
+                ScrollView {
+                    LearnModeSection(organ: organ)
+                        .padding(.horizontal, 30).padding(.vertical, 20)
+                }
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        // Fully opaque panel material — no glass, no passthrough, organ never shows through.
-        .background(
-            LinearGradient(
-                colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
-                         Color(red: 0.05, green: 0.05, blue: 0.06)],
-                startPoint: .top, endPoint: .bottom
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            // Fully opaque panel material — no glass / passthrough.
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
+                             Color(red: 0.05, green: 0.05, blue: 0.06)],
+                    startPoint: .top, endPoint: .bottom
+                )
             )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 42, style: .continuous)
-                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
-        )
+            .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 42, style: .continuous)
+                    .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+            )
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 8)
+        // Outer area is transparent so the tab pill reads as a detached control above the panel.
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
         }
