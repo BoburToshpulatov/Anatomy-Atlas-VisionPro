@@ -21,15 +21,6 @@ struct AnatomyApp: App {
         .defaultSize(width: 1300, height: 920)
         .windowResizability(.contentSize)
 
-        // Learn theater — a flat system window (always faces the viewer) opened from the
-        // study space's Learn mode.
-        WindowGroup(id: AppModel.learnWindowID) {
-            LearnReaderWindow()
-                .environment(appModel)
-        }
-        .windowStyle(.plain)
-        .defaultSize(width: 1500, height: 1000)
-
         ImmersiveSpace(id: AppModel.immersiveSpaceID) {
             ImmersiveView()
                 .environment(appModel)
