@@ -235,9 +235,9 @@ struct ImmersiveView: View {
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
                 .scaleEffect((heroVisible ? 0.98 : 0.88) * (learnActive ? 0.78 : 1.0))
-                // Fully hide the organ in Learn so it never shows through behind the panel.
-                .opacity(learnActive ? 0.0 : 1.0)
-                .blur(radius: learnActive ? 10 : 0)
+                // In Learn the organ recedes to a faded backdrop (context), not hidden.
+                .opacity(learnActive ? 0.4 : 1.0)
+                .blur(radius: learnActive ? 8 : 0)
                 .offset(z: learnActive ? -260 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.82), value: learnActive)
                 // The hero organ is purely visual — all interaction happens through the
@@ -2314,13 +2314,11 @@ struct LearnReaderWindow: View {
 
                     Spacer()
                 }
-                .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 4)
+                .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
-                ScrollView {
-                    LearnModeSection(organ: organ)
-                        .padding(.horizontal, 30).padding(.vertical, 20)
-                }
-                .scrollIndicators(.hidden)
+                LearnReaderView(organID: organ.id, tint: organ.tint)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 18)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             // Fully opaque panel material — no glass / passthrough.
