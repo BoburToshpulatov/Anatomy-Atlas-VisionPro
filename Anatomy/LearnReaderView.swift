@@ -173,7 +173,7 @@ private struct ChapterContent: View {
     let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 28) {
+        VStack(alignment: .leading, spacing: 22) {
             // Progress row
             HStack {
                 HStack(spacing: 7) {
@@ -232,6 +232,7 @@ private struct ChapterContent: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: .infinity)
+                .frame(maxHeight: 300)
                 .background(Color.black.opacity(0.25))
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(

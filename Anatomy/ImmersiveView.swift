@@ -2338,8 +2338,9 @@ struct LearnReaderWindow: View {
             )
         }
         // Fixed content size so the window is exactly this big and the system centers it
-        // (no empty area below the panel, no top-bias).
-        .frame(width: 1480, height: 940)
+        // (no empty area below the panel, no top-bias). Tall enough to show a chapter
+        // without scrolling.
+        .frame(width: 1520, height: 1280)
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
         }
