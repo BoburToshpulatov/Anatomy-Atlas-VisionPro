@@ -35,20 +35,23 @@ struct LearnReaderView: View {
                 .frame(width: 290)
 
             if let chapter = current {
-                ScrollView {
-                    ChapterContent(
-                        chapter: chapter,
-                        index: currentIndex,
-                        total: chapters.count,
-                        categoryPosition: categoryPosition(for: chapter),
-                        tint: tint,
-                        onPrev: currentIndex > 0 ? { select(chapters[currentIndex - 1]) } : nil,
-                        onNext: currentIndex < chapters.count - 1 ? { select(chapters[currentIndex + 1]) } : nil
-                    )
-                    .padding(.trailing, 6)
-                    .id(chapter.id)   // restart scroll at top on chapter change
+                VStack(spacing: 0) {
+                    ScrollView {
+                        ChapterContent(
+                            chapter: chapter,
+                            index: currentIndex,
+                            total: chapters.count,
+                            categoryPosition: categoryPosition(for: chapter),
+                            tint: tint
+                        )
+                        .padding(.trailing, 6)
+                        .id(chapter.id)   // restart scroll at top on chapter change
+                    }
+                    .scrollIndicators(.hidden)
+
+                    // Pinned navigation — always visible, no scrolling required.
+                    navigationFooter
                 }
-                .scrollIndicators(.hidden)
             }
         }
         .onAppear { if selectedID.isEmpty { selectedID = chapters.first?.id ?? "" } }
@@ -57,6 +60,38 @@ struct LearnReaderView: View {
 
     private func select(_ chapter: LearnChapter) {
         withAnimation(.easeInOut(duration: 0.28)) { selectedID = chapter.id }
+    }
+
+    // MARK: Pinned navigation footer
+
+    private var navigationFooter: some View {
+        HStack {
+            if currentIndex > 0 {
+                Button { select(chapters[currentIndex - 1]) } label: {
+                    Label("Previous", systemImage: "chevron.left")
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20).padding(.vertical, 13)
+                        .background(Capsule().fill(.white.opacity(0.1)))
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer()
+            if currentIndex < chapters.count - 1 {
+                Button { select(chapters[currentIndex + 1]) } label: {
+                    HStack(spacing: 8) {
+                        Text("Next Chapter").font(.headline.weight(.semibold))
+                        Image(systemName: "chevron.right").font(.headline.weight(.bold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 22).padding(.vertical, 13)
+                    .background(Capsule().fill(tint))
+                    .shadow(color: tint.opacity(0.4), radius: 10, y: 4)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 14)
     }
 
     /// "Anatomy • 2 of 4" position of a chapter within its category.
@@ -136,8 +171,6 @@ private struct ChapterContent: View {
     let total: Int
     let categoryPosition: (Int, Int)
     let tint: Color
-    let onPrev: (() -> Void)?
-    let onNext: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
@@ -179,24 +212,16 @@ private struct ChapterContent: View {
                 }
             }
 
-            // Alternating illustration / explanation
-            if chapter.imageLeft {
-                HStack(alignment: .top, spacing: 26) {
-                    illustration
-                    explanationColumn
-                }
-            } else {
-                HStack(alignment: .top, spacing: 26) {
-                    explanationColumn
-                    illustration
-                }
+            // Illustration always on the left, explanation on the right.
+            HStack(alignment: .top, spacing: 26) {
+                illustration
+                explanationColumn
             }
 
             keyFactsCard
             checkUnderstandingCard
-            navigation
         }
-        .padding(.bottom, 28)
+        .padding(.bottom, 18)
     }
 
     // MARK: pieces
@@ -292,35 +317,6 @@ private struct ChapterContent: View {
         )
     }
 
-    private var navigation: some View {
-        HStack {
-            if let onPrev {
-                Button(action: onPrev) {
-                    Label("Previous", systemImage: "chevron.left")
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 20).padding(.vertical, 13)
-                        .background(Capsule().fill(.white.opacity(0.1)))
-                }
-                .buttonStyle(.plain)
-            }
-            Spacer()
-            if let onNext {
-                Button(action: onNext) {
-                    HStack(spacing: 8) {
-                        Text("Next Chapter").font(.headline.weight(.semibold))
-                        Image(systemName: "chevron.right").font(.headline.weight(.bold))
-                    }
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 22).padding(.vertical, 13)
-                    .background(Capsule().fill(tint))
-                    .shadow(color: tint.opacity(0.4), radius: 10, y: 4)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.top, 4)
-    }
 }
 
 // MARK: - Label chips
