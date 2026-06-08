@@ -79,7 +79,7 @@ struct ImmersiveView: View {
             if entity.parent !== headAnchor {
                 entity.setParent(headAnchor, preservingWorldTransform: false)
             }
-            entity.position = SIMD3<Float>(0, -0.26, -1.6)   // dead ahead, lowered under the tabs
+            entity.position = SIMD3<Float>(0, -0.10, -1.6)   // dead ahead, just under the tabs
             entity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))   // flat, facing the viewer
         } else {
             if entity.parent !== worldRoot {
@@ -309,7 +309,10 @@ struct ImmersiveView: View {
                 )
                 .frame(width: panelWidthForMode, height: panelHeightForMode)
                 .opacity(panelVisible ? 1 : 0.001)
-                .animation(.spring(response: 0.5, dampingFraction: 0.84), value: appModel.selectedStudyMode)
+                // Premium "open" — the panel springs up to the big reader with a gentle settle.
+                .scaleEffect(learnActive ? 1.0 : 1.0)
+                .animation(.spring(response: 0.55, dampingFraction: 0.78), value: appModel.selectedStudyMode)
+                .animation(.spring(response: 0.55, dampingFraction: 0.78), value: panelWidthForMode)
             }
 
             Attachment(id: "carousel-stack") {
