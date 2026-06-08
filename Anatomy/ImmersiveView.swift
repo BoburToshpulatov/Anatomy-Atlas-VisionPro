@@ -2344,11 +2344,11 @@ struct LearnTheaterPanel: View {
                 .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
                 LearnReaderView(organID: organ.id, tint: organ.tint)
-                    .frame(height: 840)
+                    .frame(height: 980)
                     .padding(.horizontal, 34)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 22)
             }
-            .frame(width: 1680)
+            .frame(width: 1720)
             .background(
                 LinearGradient(
                     colors: [Color(red: 0.09, green: 0.09, blue: 0.10),

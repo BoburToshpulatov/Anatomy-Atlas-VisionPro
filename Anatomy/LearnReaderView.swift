@@ -118,7 +118,7 @@ struct LearnReaderView: View {
                             .font(.caption.weight(.bold))
                             .foregroundStyle(tint.opacity(0.9))
                         Text(category.rawValue)
-                            .font(.subheadline.weight(.bold))
+                            .font(.headline.weight(.bold))
                             .foregroundStyle(.white.opacity(0.9))
                     }
                     .padding(.top, 4)
@@ -141,7 +141,7 @@ struct LearnReaderView: View {
                     .fill(isSelected ? tint : .white.opacity(0.16))
                     .frame(width: 7, height: 7)
                 Text(chapter.title)
-                    .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                    .font(.body.weight(isSelected ? .semibold : .regular))
                     .foregroundStyle(.white.opacity(isSelected ? 1.0 : 0.62))
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -196,18 +196,18 @@ private struct ChapterContent: View {
             // Title + learning goal
             VStack(alignment: .leading, spacing: 10) {
                 Text(chapter.title)
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .font(.system(size: 52, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(alignment: .top, spacing: 9) {
+                HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "target")
-                        .font(.subheadline.weight(.bold))
+                        .font(.title3.weight(.bold))
                         .foregroundStyle(tint)
                         .padding(.top, 2)
                     Text(chapter.learningGoal)
-                        .font(.title3.weight(.medium))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(.title2.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.72))
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -242,8 +242,8 @@ private struct ChapterContent: View {
                 .shadow(color: .black.opacity(0.3), radius: 16, y: 8)
 
             Text(chapter.caption)
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(.white.opacity(0.55))
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.white.opacity(0.6))
                 .fixedSize(horizontal: false, vertical: true)
 
             if !chapter.labels.isEmpty {
@@ -256,9 +256,9 @@ private struct ChapterContent: View {
 
     private var explanationColumn: some View {
         Text(chapter.explanation)
-            .font(.title3.weight(.regular))
+            .font(.title2.weight(.regular))
             .foregroundStyle(.white.opacity(0.9))
-            .lineSpacing(6)
+            .lineSpacing(7)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -266,13 +266,13 @@ private struct ChapterContent: View {
     private var keyFactsCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Key Facts", systemImage: "key.fill")
-                .font(.headline.weight(.bold))
+                .font(.title3.weight(.bold))
                 .foregroundStyle(.white)
             ForEach(Array(chapter.keyFacts.enumerated()), id: \.offset) { _, fact in
                 HStack(alignment: .top, spacing: 12) {
-                    Circle().fill(tint).frame(width: 7, height: 7).padding(.top, 9)
+                    Circle().fill(tint).frame(width: 8, height: 8).padding(.top, 11)
                     Text(fact)
-                        .font(.title3.weight(.regular))
+                        .font(.title2.weight(.regular))
                         .foregroundStyle(.white.opacity(0.88))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -293,14 +293,14 @@ private struct ChapterContent: View {
     private var checkUnderstandingCard: some View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: "questionmark.circle.fill")
-                .font(.title.weight(.semibold))
+                .font(.largeTitle.weight(.semibold))
                 .foregroundStyle(tint)
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 7) {
                 Text("Check Your Understanding")
-                    .font(.headline.weight(.bold))
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(.white)
                 Text(chapter.checkQuestion)
-                    .font(.title3.weight(.medium))
+                    .font(.title2.weight(.medium))
                     .foregroundStyle(.white.opacity(0.85))
                     .fixedSize(horizontal: false, vertical: true)
             }
