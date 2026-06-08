@@ -88,7 +88,7 @@ struct ImmersiveView: View {
         if entity.parent !== headAnchor {
             entity.setParent(headAnchor, preservingWorldTransform: false)
         }
-        entity.position = SIMD3<Float>(0, -0.14, -1.5)   // closer = larger in view; lowered a bit
+        entity.position = SIMD3<Float>(0, -0.14, -1.42)   // closer = larger in view; lowered a bit
         entity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
@@ -2357,11 +2357,11 @@ struct LearnTheaterPanel: View {
                 .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
                 LearnReaderView(organID: organ.id, tint: organ.tint)
-                    .frame(height: 1080)
-                    .padding(.horizontal, 36)
-                    .padding(.bottom, 26)
+                    .frame(height: 1200)
+                    .padding(.horizontal, 38)
+                    .padding(.bottom, 28)
             }
-            .frame(width: 1860)
+            .frame(width: 2020)
             .background(
                 LinearGradient(
                     colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
