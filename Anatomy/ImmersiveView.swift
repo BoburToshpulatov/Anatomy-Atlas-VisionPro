@@ -43,6 +43,8 @@ struct ImmersiveView: View {
     @State private var isSwitchingOrgan = false
     @State private var viewerAngle: AnatomyOrgan.ViewerAngle = .front
     @State private var audio = SpatialAudioController()
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.dismissWindow) private var dismissWindow
     // Roots for the Learn theater: head anchor keeps the reader locked in front of the
     // viewer; world root holds it in room space for the other modes.
     @State private var headAnchor = AnchorEntity(.head)
@@ -75,21 +77,12 @@ struct ImmersiveView: View {
     /// In Learn the panel head-locks flat and squarely in front (under the tabs); otherwise
     /// it sits world-fixed and slightly angled inward.
     private func positionPanel(_ entity: Entity) {
-        if learnActive {
-            if entity.parent !== headAnchor {
-                entity.setParent(headAnchor, preservingWorldTransform: false)
-            }
-            entity.position = SIMD3<Float>(0, -0.10, -1.6)   // dead ahead, just under the tabs
-            // Billboard so it squarely faces the actual view — perfectly flat, no lean.
-            entity.components.set(BillboardComponent())
-        } else {
-            entity.components.remove(BillboardComponent.self)
-            if entity.parent !== worldRoot {
-                entity.setParent(worldRoot, preservingWorldTransform: false)
-            }
-            entity.position = panelPosition
-            entity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
+        // World-fixed study panel; Learn is shown in its own flat window instead.
+        if entity.parent !== worldRoot {
+            entity.setParent(worldRoot, preservingWorldTransform: false)
         }
+        entity.position = panelPosition
+        entity.orientation = simd_quatf(angle: -.pi / 18, axis: [0, 1, 0])
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
     // Lift the model (+rings), labels, and carousel up together; the panel stays put.
@@ -218,6 +211,10 @@ struct ImmersiveView: View {
                     }
                     .frame(width: ImmersiveLayoutConfig.topBarWidth)
                 }
+                // Hidden in Learn — the window provides its own tabs.
+                .opacity(learnActive ? 0 : 1)
+                .allowsHitTesting(!learnActive)
+                .animation(.easeInOut(duration: 0.3), value: learnActive)
             }
 
             Attachment(id: "ambient-aura") {
@@ -310,11 +307,9 @@ struct ImmersiveView: View {
                     }
                 )
                 .frame(width: panelWidthForMode, height: panelHeightForMode)
-                .opacity(panelVisible ? 1 : 0.001)
-                // Premium "open" — the panel springs up to the big reader with a gentle settle.
-                .scaleEffect(learnActive ? 1.0 : 1.0)
-                .animation(.spring(response: 0.55, dampingFraction: 0.78), value: appModel.selectedStudyMode)
-                .animation(.spring(response: 0.55, dampingFraction: 0.78), value: panelWidthForMode)
+                // Hidden in Learn — the flat Learn window takes over.
+                .opacity(learnActive ? 0 : (panelVisible ? 1 : 0.001))
+                .animation(.spring(response: 0.5, dampingFraction: 0.84), value: appModel.selectedStudyMode)
             }
 
             Attachment(id: "carousel-stack") {
@@ -362,6 +357,11 @@ struct ImmersiveView: View {
         .onChange(of: appModel.selectedStudyMode) { _, newValue in
             withAnimation(.spring(response: 0.48, dampingFraction: 0.84)) {
                 labelsVisible = newValue == .labels
+            }
+            if newValue == .learn {
+                openWindow(id: AppModel.learnWindowID)
+            } else {
+                dismissWindow(id: AppModel.learnWindowID)
             }
         }
     }
@@ -2265,5 +2265,88 @@ private struct ImmersiveAuraField: View {
 #Preview(immersionStyle: .mixed) {
     ImmersiveView()
         .environment(AppModel())
+}
+
+// MARK: - Learn reader (flat opaque window)
+
+/// Learn reader as a flat system window — always faces the viewer (no 3D perspective lean),
+/// fully opaque (no glass / passthrough), system chrome hidden.
+struct LearnReaderWindow: View {
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.dismissWindow) private var dismissWindow
+
+    private var organ: AnatomyOrgan { appModel.selectedOrgan }
+    private var modeTitles: [String] { AppModel.StudyMode.allCases.map(\.title) }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                Button(action: exitLearn) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "chevron.left").font(.headline.weight(.bold))
+                        Text("Back").font(.headline.weight(.semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 11)
+                    .background(Capsule().fill(organ.tint))
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                ImmersiveModeBar(
+                    items: modeTitles,
+                    selectedItem: appModel.selectedStudyMode.title,
+                    accent: organ.tint
+                ) { title in
+                    if let mode = AppModel.StudyMode.allCases.first(where: { $0.title == title }) {
+                        appModel.setStudyMode(mode)
+                        if mode != .learn { dismissWindow(id: AppModel.learnWindowID) }
+                    }
+                }
+
+                Spacer()
+                Color.clear.frame(width: 120, height: 1)
+            }
+            .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 6)
+
+            HStack {
+                Text(organ.title)
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+                Spacer()
+            }
+            .padding(.horizontal, 30)
+
+            ScrollView {
+                LearnModeSection(organ: organ)
+                    .padding(.horizontal, 30).padding(.vertical, 20)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Fully opaque panel material — no glass, no passthrough, organ never shows through.
+        .background(
+            LinearGradient(
+                colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
+                         Color(red: 0.05, green: 0.05, blue: 0.06)],
+                startPoint: .top, endPoint: .bottom
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 42, style: .continuous)
+                .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+        )
+        .onDisappear {
+            if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
+        }
+    }
+
+    private func exitLearn() {
+        appModel.setStudyMode(.explore)
+        dismissWindow(id: AppModel.learnWindowID)
+    }
 }
 
