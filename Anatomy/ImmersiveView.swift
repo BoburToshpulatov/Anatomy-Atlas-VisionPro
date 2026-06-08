@@ -64,13 +64,13 @@ struct ImmersiveView: View {
     /// Panel width per mode — narrower in Labels so right-side callouts have room.
     private var panelWidthForMode: CGFloat {
         switch appModel.selectedStudyMode {
-        case .learn:  return 1680   // theater: wide, centered reader
+        case .learn:  return 1840   // theater: wide, centered reader
         case .labels: return 600    // narrower so right-side callouts have room
         default:      return viewerLayout.panelWidth
         }
     }
     private var panelHeightForMode: CGFloat {
-        learnActive ? 1320 : ImmersiveLayoutConfig.panelHeight
+        learnActive ? 1380 : ImmersiveLayoutConfig.panelHeight
     }
     /// Places the panel: head-locked and squarely in front in the Learn theater, or
     /// world-fixed (slightly angled inward) for the other modes.
