@@ -211,10 +211,6 @@ struct ImmersiveView: View {
                     }
                     .frame(width: ImmersiveLayoutConfig.topBarWidth)
                 }
-                // Hidden in Learn — the window provides its own tabs.
-                .opacity(learnActive ? 0 : 1)
-                .allowsHitTesting(!learnActive)
-                .animation(.easeInOut(duration: 0.3), value: learnActive)
             }
 
             Attachment(id: "ambient-aura") {
@@ -2293,31 +2289,14 @@ struct LearnReaderWindow: View {
                 }
                 .buttonStyle(.plain)
 
-                Spacer()
-
-                ImmersiveModeBar(
-                    items: modeTitles,
-                    selectedItem: appModel.selectedStudyMode.title,
-                    accent: organ.tint
-                ) { title in
-                    if let mode = AppModel.StudyMode.allCases.first(where: { $0.title == title }) {
-                        appModel.setStudyMode(mode)
-                        if mode != .learn { dismissWindow(id: AppModel.learnWindowID) }
-                    }
-                }
-
-                Spacer()
-                Color.clear.frame(width: 120, height: 1)
-            }
-            .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 6)
-
-            HStack {
                 Text(organ.title)
                     .font(.system(size: 40, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
+                    .padding(.leading, 8)
+
                 Spacer()
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 30).padding(.top, 26).padding(.bottom, 4)
 
             ScrollView {
                 LearnModeSection(organ: organ)
