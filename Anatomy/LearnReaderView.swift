@@ -233,7 +233,7 @@ private struct ChapterContent: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: .infinity)
                 .frame(maxHeight: 300)
-                .background(Color.black.opacity(0.25))
+                .background(Color.black)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)

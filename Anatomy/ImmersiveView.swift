@@ -88,7 +88,7 @@ struct ImmersiveView: View {
         if entity.parent !== headAnchor {
             entity.setParent(headAnchor, preservingWorldTransform: false)
         }
-        entity.position = SIMD3<Float>(0, -0.02, -1.5)   // closer = larger in view
+        entity.position = SIMD3<Float>(0, -0.14, -1.5)   // closer = larger in view; lowered a bit
         entity.orientation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
     }
     private var viewerLayout: AnatomyOrgan.ViewerLayout { selectedOrgan.viewerLayout(for: viewerAngle) }
