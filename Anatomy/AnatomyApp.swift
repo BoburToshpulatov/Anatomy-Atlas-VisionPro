@@ -28,7 +28,7 @@ struct AnatomyApp: App {
                 .persistentSystemOverlays(.hidden)   // hide the window grabber/chrome
         }
         .windowStyle(.plain)
-        .defaultSize(width: 1520, height: 1430)
+        .defaultSize(width: 1540, height: 1160)
         .windowResizability(.contentSize)
 
         ImmersiveSpace(id: AppModel.immersiveSpaceID) {

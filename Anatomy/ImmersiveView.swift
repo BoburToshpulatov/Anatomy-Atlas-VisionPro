@@ -2281,67 +2281,72 @@ struct LearnReaderWindow: View {
     private var modeTitles: [String] { AppModel.StudyMode.allCases.map(\.title) }
 
     var body: some View {
-        VStack(spacing: 18) {
-            // Detached tab pill — floats ABOVE the panel, outside its border.
-            ImmersiveModeBar(
-                items: modeTitles,
-                selectedItem: appModel.selectedStudyMode.title,
-                accent: organ.tint
-            ) { title in
-                if let mode = AppModel.StudyMode.allCases.first(where: { $0.title == title }) {
-                    appModel.setStudyMode(mode)
-                    if mode != .learn { dismissWindow(id: AppModel.learnWindowID) }
-                }
-            }
+        // Center the tabs + panel group vertically in a transparent window so it reads as
+        // a clean floating panel (no empty card area, tabs always visible above it).
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
 
-            // The opaque panel card below the tabs.
-            VStack(spacing: 0) {
-                HStack(alignment: .center, spacing: 16) {
-                    Button(action: exitLearn) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "chevron.left").font(.headline.weight(.bold))
-                            Text("Back").font(.headline.weight(.semibold))
-                        }
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 11)
-                        .background(Capsule().fill(organ.tint))
+            VStack(spacing: 16) {
+                // Detached tab pill — floats ABOVE the panel, outside its border.
+                ImmersiveModeBar(
+                    items: modeTitles,
+                    selectedItem: appModel.selectedStudyMode.title,
+                    accent: organ.tint
+                ) { title in
+                    if let mode = AppModel.StudyMode.allCases.first(where: { $0.title == title }) {
+                        appModel.setStudyMode(mode)
+                        if mode != .learn { dismissWindow(id: AppModel.learnWindowID) }
                     }
-                    .buttonStyle(.plain)
-
-                    Text(organ.title)
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.leading, 8)
-
-                    Spacer()
                 }
-                .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
 
-                LearnReaderView(organID: organ.id, tint: organ.tint)
-                    .padding(.horizontal, 30)
-                    .padding(.bottom, 18)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            // Fully opaque panel material — no glass / passthrough.
-            .background(
-                LinearGradient(
-                    colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
-                             Color(red: 0.05, green: 0.05, blue: 0.06)],
-                    startPoint: .top, endPoint: .bottom
+                // The opaque panel card — hugs its content (no empty filler space).
+                VStack(spacing: 0) {
+                    HStack(alignment: .center, spacing: 16) {
+                        Button(action: exitLearn) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "chevron.left").font(.headline.weight(.bold))
+                                Text("Back").font(.headline.weight(.semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 18)
+                            .padding(.vertical, 11)
+                            .background(Capsule().fill(organ.tint))
+                        }
+                        .buttonStyle(.plain)
+
+                        Text(organ.title)
+                            .font(.system(size: 40, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white)
+                            .padding(.leading, 8)
+
+                        Spacer()
+                    }
+                    .padding(.horizontal, 30).padding(.top, 24).padding(.bottom, 8)
+
+                    LearnReaderView(organID: organ.id, tint: organ.tint)
+                        .frame(height: 740)
+                        .padding(.horizontal, 30)
+                        .padding(.bottom, 18)
+                }
+                .frame(width: 1480)
+                // Fully opaque panel material — no glass / passthrough.
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 0.09, green: 0.09, blue: 0.10),
+                                 Color(red: 0.05, green: 0.05, blue: 0.06)],
+                        startPoint: .top, endPoint: .bottom
+                    )
                 )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 42, style: .continuous)
-                    .strokeBorder(.white.opacity(0.10), lineWidth: 1)
-            )
+                .clipShape(RoundedRectangle(cornerRadius: 42, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 42, style: .continuous)
+                        .strokeBorder(.white.opacity(0.10), lineWidth: 1)
+                )
+            }
+
+            Spacer(minLength: 0)
         }
-        // Transparent top gap pushes the visible panel lower in the (centered) window.
-        .padding(.top, 150)
-        // Fixed content size so the window is exactly this big and the system centers it.
-        // Tall enough to show a chapter without scrolling.
-        .frame(width: 1520, height: 1430)
+        .frame(width: 1540, height: 1160)
         .onDisappear {
             if appModel.selectedStudyMode == .learn { appModel.setStudyMode(.explore) }
         }
