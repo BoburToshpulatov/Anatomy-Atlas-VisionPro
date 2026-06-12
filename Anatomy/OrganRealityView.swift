@@ -15,7 +15,34 @@ struct OrganRealityView: View {
     let selectedAnnotationID: String?
     let showAnnotations: Bool
     let isHeroVisible: Bool
+    /// Explore mode: the organ slowly auto-rotates and can be grabbed to spin by hand.
+    var autoRotate: Bool = false
     let onSelectAnnotation: (String) -> Void
+
+    // Drag-to-rotate state.
+    private let autoSpinSpeed: Double = 13   // degrees per second
+    @State private var manualYaw: Double = 0
+    @State private var autoBaseTime: TimeInterval = Date().timeIntervalSinceReferenceDate
+    @State private var isDragging = false
+    @State private var dragStartYaw: Double = 0
+
+    /// Drag the organ to spin it; auto-rotation pauses while dragging and resumes on release.
+    private var rotationDrag: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                if !isDragging {
+                    let now = Date().timeIntervalSinceReferenceDate
+                    if autoRotate { manualYaw += (now - autoBaseTime) * autoSpinSpeed }
+                    dragStartYaw = manualYaw
+                    isDragging = true
+                }
+                manualYaw = dragStartYaw + Double(value.translation.width) * 0.4
+            }
+            .onEnded { _ in
+                isDragging = false
+                autoBaseTime = Date().timeIntervalSinceReferenceDate
+            }
+    }
 
     private var selectedAnnotation: OrganAnnotation? {
         guard let selectedAnnotationID else { return nil }
@@ -60,9 +87,10 @@ struct OrganRealityView: View {
                 // callout lines stay aligned with the anatomy.
                 let motionRate = organ.pulseStyle == .heartbeat ? 0.55 : 0.40
                 let sway = showAnnotations ? 0 : sin(time * motionRate) * (organ.pulseStyle == .heartbeat ? 8 : 5)
-                // Rotation removed — the organ is a curated educational subject, not a
-                // free-spin toy. A gentle sway/float only.
-                let autoSpin: Double = 0
+                // Explore: continuous auto-spin (paused while the user drags), plus any
+                // manual rotation the user has applied. Other modes stay still.
+                let autoComponent = (autoRotate && !isDragging) ? (time - autoBaseTime) * autoSpinSpeed : 0
+                let autoSpin = manualYaw + autoComponent
                 let lift = sin(time * (organ.pulseStyle == .heartbeat ? 0.95 : 0.70)) * (showAnnotations ? 3 : (organ.pulseStyle == .heartbeat ? 10 : 7))
                 let organPulse: CGFloat = {
                     if showAnnotations { return 1.0 }
@@ -194,6 +222,8 @@ struct OrganRealityView: View {
                             }
                         }
                         .frame(width: geometry.size.width * bundledFrameScale.width, height: geometry.size.height * bundledFrameScale.height)
+                        .contentShape(Rectangle())
+                        .gesture(rotationDrag)
                     } else {
                         organPlaceholder(in: geometry, organPulse: organPulse, sway: sway, lift: lift, focusYaw: focusYaw, focusPitch: focusPitch, focusScale: focusScale, focusOffset: focusOffset)
                             .frame(width: geometry.size.width * 0.36, height: geometry.size.height * 0.28)

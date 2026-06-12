@@ -61,6 +61,8 @@ struct ImmersiveView: View {
     private var selectedIndex: Int { organs.firstIndex(where: { $0.id == appModel.selectedOrganID }) ?? 0 }
     /// In Learn mode the organ and carousel recede so the reader becomes the focus.
     private var learnActive: Bool { appModel.selectedStudyMode == .learn }
+    /// Explore mode with the organ on screen — enables auto-rotate + drag-to-spin.
+    private var exploreInteractive: Bool { appModel.selectedStudyMode == .explore && heroVisible }
     /// Panel width per mode — narrower in Labels so right-side callouts have room.
     private var panelWidthForMode: CGFloat {
         switch appModel.selectedStudyMode {
@@ -244,6 +246,7 @@ struct ImmersiveView: View {
                     showAnnotations: labelsVisible,
                     isHeroVisible: heroVisible,
                     isGlowVisible: backgroundGlowVisible,
+                    autoRotate: exploreInteractive,
                     onAnnotationSelected: selectAnnotation
                 )
                 .frame(width: ImmersiveLayoutConfig.heroFrame.width, height: ImmersiveLayoutConfig.heroFrame.height)
@@ -252,12 +255,10 @@ struct ImmersiveView: View {
                 .opacity(learnActive ? 0.0 : 1.0)
                 .blur(radius: learnActive ? 8 : 0)
                 .offset(z: learnActive ? -260 : 0)
-                .allowsHitTesting(!learnActive)
+                // Only interactive in Explore (drag-to-rotate); otherwise purely visual so
+                // it never covers the carousel / panel / label tap areas.
+                .allowsHitTesting(exploreInteractive)
                 .animation(.spring(response: 0.6, dampingFraction: 0.82), value: learnActive)
-                // The hero organ is purely visual — all interaction happens through the
-                // label, panel and carousel attachments. Disabling hit testing on this
-                // large frame stops it from covering the carousel / panel tap areas.
-                .allowsHitTesting(false)
             }
 
             makeAnnotationAttachment(index: 0)
@@ -857,6 +858,7 @@ private struct ImmersiveHeroStage: View {
     let showAnnotations: Bool
     let isHeroVisible: Bool
     let isGlowVisible: Bool
+    var autoRotate: Bool = false
     let onAnnotationSelected: (String) -> Void
 
     /// THE one staging knob per organ: where the pedestal sits relative to the model,
@@ -967,6 +969,7 @@ private struct ImmersiveHeroStage: View {
                 selectedAnnotationID: selectedAnnotationID,
                 showAnnotations: showAnnotations,
                 isHeroVisible: isHeroVisible,
+                autoRotate: autoRotate,
                 onSelectAnnotation: onAnnotationSelected
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
